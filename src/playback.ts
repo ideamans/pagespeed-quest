@@ -71,7 +71,7 @@ export class PlaybackProxy extends Proxy {
           { number, identifier },
           `Request #${number} ${identifier.url} (${identifier.method}) not found in inventory`
         )
-        return onRequestComplete()
+        return
       }
 
       const contentStream = this.createThrottlingTransform() || ctx.proxyToClientResponse
