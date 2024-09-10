@@ -3,7 +3,7 @@
 import Fsp from 'fs/promises'
 
 import { Command } from 'commander'
-import Execa from 'execa'
+import { execa } from 'execa'
 import Watch from 'node-watch'
 
 import { logger, withPlaybackProxy, WithProxyOptions, withRecordingProxy } from './index.js'
@@ -47,7 +47,7 @@ async function runLighthouse(opts: LighthouseOptions) {
 
   if (opts.view) args.push('--view')
 
-  await Execa('./node_modules/.bin/lighthouse', args)
+  await execa('./node_modules/.bin/lighthouse', args)
 }
 
 const main = new Command()
