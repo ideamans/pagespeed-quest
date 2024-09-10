@@ -58,7 +58,7 @@
     "http-mitm-proxy": "^0.9.0",
     "iconv-lite": "^0.6.3",
     "jschardet": "^3.0.0",
-    "lighthouse": "^11.2.0",
+    "lighthouse": "^12.2.1",
     "node-watch": "^0.7.4",
     "pino": "^9.4.0",
     "pino-pretty": "^11.2.2",
