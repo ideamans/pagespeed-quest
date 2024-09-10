@@ -6,7 +6,7 @@ import { Command } from 'commander'
 import Execa from 'execa'
 import Watch from 'node-watch'
 
-import { logger, withPlaybackProxy, WithProxyOptions, withRecordingProxy } from './index'
+import { logger, withPlaybackProxy, WithProxyOptions, withRecordingProxy } from './index.js'
 
 type FormFactorType = 'mobile' | 'desktop'
 

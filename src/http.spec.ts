@@ -1,6 +1,6 @@
 import test from 'ava'
 
-import { normalizeUrl, parseContentTypeHeader, requestContentFilePath, stringifyContentTypeHeader } from './http'
+import { normalizeUrl, parseContentTypeHeader, requestContentFilePath, stringifyContentTypeHeader } from './http.js'
 
 test('normalizeUrl', (t) => {
   t.is(normalizeUrl('http://example.com/?ts=123').href, 'http://example.com/?ts=')

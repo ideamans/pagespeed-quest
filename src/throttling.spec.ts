@@ -2,7 +2,7 @@ import { Readable, Writable } from 'stream'
 
 import test from 'ava'
 
-import { Throttle, ThrottlingTransform } from './throttling'
+import { Throttle, ThrottlingTransform } from './throttling.js'
 
 test('Throttle capacity', (t) => {
   const throttle = new Throttle(1000, 100)

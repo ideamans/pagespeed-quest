@@ -6,7 +6,7 @@ import Axios from 'axios'
 import GetPort from 'get-port'
 import Tmp from 'tmp-promise'
 
-import { Proxy } from './proxy'
+import { Proxy } from './proxy.js'
 
 class TestProxy extends Proxy {
   shutdownFlag = false

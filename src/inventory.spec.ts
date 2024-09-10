@@ -4,7 +4,7 @@ import Path from 'path'
 import test from 'ava'
 import Tmp from 'tmp-promise'
 
-import { Inventory, InventoryRepository, Transaction } from './inventory'
+import { Inventory, InventoryRepository, Transaction } from './inventory.js'
 
 test('Save and load inventory', async (t) => {
   await Tmp.withDir(

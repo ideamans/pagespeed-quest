@@ -1,8 +1,8 @@
 import { IncomingHttpHeaders } from 'http'
 
-import { Inventory, Transaction } from './inventory'
-import { logger } from './logger'
-import { Proxy, withProxy, WithProxyOptions } from './proxy'
+import { Inventory, Transaction } from './inventory.js'
+import { logger } from './logger.js'
+import { Proxy, withProxy, WithProxyOptions } from './proxy.js'
 
 export interface RecordingTransaction {
   startedAt?: Date
