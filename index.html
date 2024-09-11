@@ -1,0 +1,348 @@
+<!doctype html>
+<html class="default no-js">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>pagespeed-quest</title>
+	<meta name="description" content="Documentation for pagespeed-quest">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+<header>
+	<div class="tsd-page-toolbar">
+		<div class="container">
+			<div class="table-wrap">
+				<div class="table-cell" id="tsd-search" data-index="assets/js/search.json" data-base=".">
+					<div class="field">
+						<label for="tsd-search-field" class="tsd-widget search no-caption">Search</label>
+						<input id="tsd-search-field" type="text" />
+					</div>
+					<ul class="results">
+						<li class="state loading">Preparing search index...</li>
+						<li class="state failure">The search index is not available</li>
+					</ul>
+					<a href="index.html" class="title">pagespeed-quest</a>
+				</div>
+				<div class="table-cell" id="tsd-widgets">
+					<div id="tsd-filter">
+						<a href="#" class="tsd-widget options no-caption" data-toggle="options">Options</a>
+						<div class="tsd-filter-group">
+							<div class="tsd-select" id="tsd-filter-visibility">
+								<span class="tsd-select-label">All</span>
+								<ul class="tsd-select-list">
+									<li data-value="public">Public</li>
+									<li data-value="protected">Public/Protected</li>
+									<li data-value="private" class="selected">All</li>
+								</ul>
+							</div>
+							<input type="checkbox" id="tsd-filter-inherited" checked />
+							<label class="tsd-widget" for="tsd-filter-inherited">Inherited</label>
+							<input type="checkbox" id="tsd-filter-externals" checked />
+							<label class="tsd-widget" for="tsd-filter-externals">Externals</label>
+							<input type="checkbox" id="tsd-filter-only-exported" />
+							<label class="tsd-widget" for="tsd-filter-only-exported">Only exported</label>
+						</div>
+					</div>
+					<a href="#" class="tsd-widget menu no-caption" data-toggle="menu">Menu</a>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="tsd-page-title">
+		<div class="container">
+			<ul class="tsd-breadcrumb">
+				<li>
+					<a href="globals.html">Globals</a>
+				</li>
+			</ul>
+			<h1>pagespeed-quest</h1>
+		</div>
+	</div>
+</header>
+<div class="container container-main">
+	<div class="row">
+		<div class="col-8 col-content">
+			<div class="tsd-panel tsd-typography">
+				<p>| <a href="./README.ja.md">日本語</a> | <a href="./README.md">English</a> |</p>
+				<a href="#pagespeed-quest" id="pagespeed-quest" style="color: inherit; text-decoration: none;">
+					<h1>PageSpeed Quest</h1>
+				</a>
+				<p>PageSpeed Quest is a framework to assist in improving the speed of web frontend.</p>
+				<p>There are numerous methods and ideas to enhance the speed of a web frontend, including the fix of bottlenecks. However, even if theoretically effective methods are implemented in applications, the expected results are often not achieved.</p>
+				<p>By utilizing PageSpeed Quest, you can rapidly iterate on the hypothesis testing of methods and prioritize the implementation of effective ideas.</p>
+				<a href="#mechanism" id="mechanism" style="color: inherit; text-decoration: none;">
+					<h2>Mechanism</h2>
+				</a>
+				<p>Those who are familiar with the Web API mocking tool <a href="https://github.com/vcr/vcr">VCR</a> can understand it as an extension of that tool for web pages.</p>
+				<p><a href="https://developer.chrome.com/docs/lighthouse/overview/">Lighthouse</a> is executed via an HTTP proxy provided by PageSpeed Quest. This HTTP proxy not only relays between the web server and Lighthouse but also &quot;records&quot; web page resources by converting them into a set of files like static pages.</p>
+				<p><img src="./docs/recording.png" alt="Recording"></p>
+				<p>From then on, instead of accessing the web server, the server&#39;s response is &quot;played back&quot; using the recorded static files. During this, the latency and throughput of each resource traffic are reproduced as much as possible.</p>
+				<p><img src="./docs/playback.png" alt="Playback"></p>
+				<p>Thanks to this mechanism, instead of actually modifying the application, you can quickly test the impact on measurement results by only changing the set of static files.</p>
+				<a href="#how-to-use" id="how-to-use" style="color: inherit; text-decoration: none;">
+					<h2>How to use</h2>
+				</a>
+				<p>Node JS 18 or higher is required.</p>
+				<a href="#creating-a-project" id="creating-a-project" style="color: inherit; text-decoration: none;">
+					<h3>Creating a project</h3>
+				</a>
+				<p>First, create a project to proceed with hypothesis testing. Change the directory name as needed.</p>
+				<pre><code class="language-sh">mkdir my-first-quest
+<span class="hljs-built_in">cd</span> my-first-quest
+yarn init -y
+yarn add pagespeed-quest -D
+</code></pre>
+				<a href="#recording-a-web-page" id="recording-a-web-page" style="color: inherit; text-decoration: none;">
+					<h3>Recording a web page</h3>
+				</a>
+				<p>Run Lighthouse with the following command and record the files needed for measurement. Please change the URL.</p>
+				<pre><code class="language-sh">yarn psq lighthouse recording https://example.com/
+</code></pre>
+				<p>Files are created in the <code>inventory</code> directory.</p>
+				<ul>
+					<li><code>inventory/index.json</code> List of resources and metadata</li>
+					<li><code>inventory/[method]/[protocol]/[hostname]/[...path]</code> Content of each resource</li>
+				</ul>
+				<p>By modifying these files, you can change the resources, metadata, and transfer speed that Lighthouse receives in the playback operation explained next.</p>
+				<a href="#playback-and-measurement-of-the-web-page" id="playback-and-measurement-of-the-web-page" style="color: inherit; text-decoration: none;">
+					<h3>Playback and measurement of the web page</h3>
+				</a>
+				<p>Play back the web page with the following command and measure it with Lighthouse.</p>
+				<pre><code class="language-sh">yarn psq lighthouse playback
+</code></pre>
+				<p>A report page is automatically displayed. Report files and the like are created in the <code>artifacts</code> directory.</p>
+				<a href="#launching-the-playback-proxy" id="launching-the-playback-proxy" style="color: inherit; text-decoration: none;">
+					<h2>Launching the playback proxy</h2>
+				</a>
+				<p>You can launch only the proxy that plays back the web page with the following command.</p>
+				<pre><code class="language-sh">yarn psq proxy -p 8080
+</code></pre>
+				<p>By setting the HTTP proxy of a regular browser to <code>http://localhost:8080</code>, you can closely observe the performance timeline in developer tools.</p>
+				<p>However, since this HTTP proxy uses a dummy SSL certificate, please disable the browser&#39;s SSL certificate error check. For example, on MacOS, you can launch Chrome with the HTTP proxy set to <code>http://localhost:8080</code> and the SSL certificate error check disabled with the following command.</p>
+				<pre><code class="language-sh">/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --ignore-certificate-errors --proxy-server=http://localhost:8080
+</code></pre>
+				<a href="#for-sharing-development-environments-and-training" id="for-sharing-development-environments-and-training" style="color: inherit; text-decoration: none;">
+					<h2>For Sharing Development Environments and Training</h2>
+				</a>
+				<p>PageSpeed Quest is useful not only for speedy hypothesis verification without the need for a Web application release but also for other purposes.</p>
+				<ul>
+					<li><code>Third-party Collaboration</code>: There may be times when it is difficult to share the development environment when seeking the cooperation of third parties. You can easily share a virtual development environment for the Web frontend.</li>
+					<li><code>Training</code>: Not just for your own site, but you can train to improve the speed of any Web page&#39;s frontend.</li>
+				</ul>
+				<a href="#contact" id="contact" style="color: inherit; text-decoration: none;">
+					<h2>Contact</h2>
+				</a>
+				<p>For technical support or business use, please contact <a href="mailto:&#x63;&#111;&#x6e;&#116;&#x61;&#x63;&#116;&#x40;&#105;&#x64;&#x65;&#x61;&#109;&#x61;&#x6e;&#115;&#46;&#x63;&#111;&#x6d;">&#x63;&#111;&#x6e;&#116;&#x61;&#x63;&#116;&#x40;&#105;&#x64;&#x65;&#x61;&#109;&#x61;&#x6e;&#115;&#46;&#x63;&#111;&#x6d;</a>.</p>
+			</div>
+		</div>
+		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
+			<nav class="tsd-navigation primary">
+				<ul>
+					<li class="globals  ">
+						<a href="globals.html"><em>Globals</em></a>
+					</li>
+				</ul>
+			</nav>
+			<nav class="tsd-navigation secondary menu-sticky">
+				<ul class="before-current">
+					<li class=" tsd-kind-class">
+						<a href="classes/inventoryrepository.html" class="tsd-kind-icon">Inventory<wbr>Repository</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="classes/playbackproxy.html" class="tsd-kind-icon">Playback<wbr>Proxy</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="classes/proxy.html" class="tsd-kind-icon">Proxy</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="classes/recordingproxy.html" class="tsd-kind-icon">Recording<wbr>Proxy</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="classes/testproxy.html" class="tsd-kind-icon">Test<wbr>Proxy</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="classes/throttle.html" class="tsd-kind-icon">Throttle</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="classes/throttlinglog.html" class="tsd-kind-icon">Throttling<wbr>Log</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="classes/throttlingtransform.html" class="tsd-kind-icon">Throttling<wbr>Transform</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="interfaces/beautifyresult.html" class="tsd-kind-icon">Beautify<wbr>Result</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="interfaces/contentencodingpair.html" class="tsd-kind-icon">Content<wbr>Encoding<wbr>Pair</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="interfaces/inventory.html" class="tsd-kind-icon">Inventory</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="interfaces/lighthouseoptions.html" class="tsd-kind-icon">Lighthouse<wbr>Options</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="interfaces/playbacktransaction.html" class="tsd-kind-icon">Playback<wbr>Transaction</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="interfaces/proxyoptions.html" class="tsd-kind-icon">Proxy<wbr>Options</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="interfaces/recordingsession.html" class="tsd-kind-icon">Recording<wbr>Session</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="interfaces/recordingtransaction.html" class="tsd-kind-icon">Recording<wbr>Transaction</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="interfaces/resource.html" class="tsd-kind-icon">Resource</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="interfaces/transaction.html" class="tsd-kind-icon">Transaction</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="interfaces/withproxyoptions.html" class="tsd-kind-icon">With<wbr>Proxy<wbr>Options</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="globals.html#contentencodingtype" class="tsd-kind-icon">Content<wbr>Encoding<wbr>Type</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="globals.html#formfactortype" class="tsd-kind-icon">Form<wbr>Factor<wbr>Type</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="globals.html#httpheaders" class="tsd-kind-icon">Http<wbr>Headers</a>
+					</li>
+					<li class=" tsd-kind-variable">
+						<a href="globals.html#basenamemaxlength" class="tsd-kind-icon">Basename<wbr>Max<wbr>Length</a>
+					</li>
+					<li class=" tsd-kind-variable">
+						<a href="globals.html#chunksize" class="tsd-kind-icon">Chunk<wbr>Size</a>
+					</li>
+					<li class=" tsd-kind-variable">
+						<a href="globals.html#contentencodingmap" class="tsd-kind-icon">Content<wbr>Encoding<wbr>Map</a>
+					</li>
+					<li class=" tsd-kind-variable">
+						<a href="globals.html#directoryindex" class="tsd-kind-icon">Directory<wbr>Index</a>
+					</li>
+					<li class=" tsd-kind-variable">
+						<a href="globals.html#hashlength" class="tsd-kind-icon">Hash<wbr>Length</a>
+					</li>
+					<li class=" tsd-kind-variable">
+						<a href="globals.html#ignoreparams" class="tsd-kind-icon">Ignore<wbr>Params</a>
+					</li>
+					<li class=" tsd-kind-variable">
+						<a href="globals.html#ignoreparamsregex" class="tsd-kind-icon">Ignore<wbr>Params<wbr>Regex</a>
+					</li>
+					<li class=" tsd-kind-variable">
+						<a href="globals.html#indexfile" class="tsd-kind-icon">Index<wbr>File</a>
+					</li>
+					<li class=" tsd-kind-variable">
+						<a href="globals.html#inventorydir" class="tsd-kind-icon">Inventory<wbr>Dir</a>
+					</li>
+					<li class=" tsd-kind-variable">
+						<a href="globals.html#main" class="tsd-kind-icon">main</a>
+					</li>
+					<li class=" tsd-kind-variable">
+						<a href="globals.html#singleton" class="tsd-kind-icon">singleton</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#compress" class="tsd-kind-icon">compress</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#converteditabletext" class="tsd-kind-icon">convert<wbr>Editable<wbr>Text</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#decompress" class="tsd-kind-icon">decompress</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#ensureutf8string" class="tsd-kind-icon">ensure<wbr>Utf8<wbr>String</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#iscss" class="tsd-kind-icon">is<wbr>Css</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#ishtml" class="tsd-kind-icon">is<wbr>Html</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#isjs" class="tsd-kind-icon">is<wbr>Js</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#istext" class="tsd-kind-icon">is<wbr>Text</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#lighthousecommands" class="tsd-kind-icon">lighthouse<wbr>Commands</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#logger" class="tsd-kind-icon">logger</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#normalizeurl" class="tsd-kind-icon">normalize<wbr>Url</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#parsecontenttypeheader" class="tsd-kind-icon">parse<wbr>Content<wbr>Type<wbr>Header</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#playback" class="tsd-kind-icon">playback</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#proxycommands" class="tsd-kind-icon">proxy<wbr>Commands</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#recording" class="tsd-kind-icon">recording</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#requestcontentfilepath" class="tsd-kind-icon">request<wbr>Content<wbr>File<wbr>Path</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#runlighthouse" class="tsd-kind-icon">run<wbr>Lighthouse</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#stringifycontenttypeheader" class="tsd-kind-icon">stringify<wbr>Content<wbr>Type<wbr>Header</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#withplaybackproxy" class="tsd-kind-icon">with<wbr>Playback<wbr>Proxy</a>
+					</li>
+					<li class=" tsd-kind-function tsd-has-type-parameter">
+						<a href="globals.html#withproxy" class="tsd-kind-icon">with<wbr>Proxy</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#withrecordingproxy" class="tsd-kind-icon">with<wbr>Recording<wbr>Proxy</a>
+					</li>
+					<li class=" tsd-kind-object-literal">
+						<a href="globals.html#prettierdefaultoptions" class="tsd-kind-icon">Prettier<wbr>Default<wbr>Options</a>
+					</li>
+				</ul>
+			</nav>
+		</div>
+	</div>
+</div>
+<footer class="with-border-bottom">
+	<div class="container">
+		<h2>Legend</h2>
+		<div class="tsd-legend-group">
+			<ul class="tsd-legend">
+				<li class="tsd-kind-constructor tsd-parent-kind-class"><span class="tsd-kind-icon">Constructor</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-class"><span class="tsd-kind-icon">Property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class"><span class="tsd-kind-icon">Method</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-constructor tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited constructor</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited method</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-interface"><span class="tsd-kind-icon">Property</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><span class="tsd-kind-icon">Static method</span></li>
+			</ul>
+		</div>
+	</div>
+</footer>
+<div class="container tsd-generator">
+	<p>Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p>
+</div>
+<div class="overlay"></div>
+<script src="assets/js/main.js"></script>
+</body>
+</html>
