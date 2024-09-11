@@ -15,7 +15,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: yarn
+          cache: npm
+          registry-url: 'https://registry.npmjs.org'
       - name: Install modules
         run: yarn install
       - name: Building & Testing
@@ -30,6 +31,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20.x'
+          cache: npm
+          registry-url: 'https://registry.npmjs.org'
       - name: Install modules
         run: yarn install
       - name: Publish to npm
