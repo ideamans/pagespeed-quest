@@ -10,3 +10,5 @@ package-lock.json
 tmp
 inventory
 artifacts
+
+tsconfig.tsbuildinfo

@@ -5,8 +5,8 @@ import test from 'ava'
 import Axios from 'axios'
 import Tmp from 'tmp-promise'
 
-import { InventoryRepository } from './inventory'
-import { withPlaybackProxy } from './playback'
+import { InventoryRepository } from './inventory.js'
+import { withPlaybackProxy } from './playback.js'
 
 test('PlaybackProxy', async (t) => {
   await Tmp.withDir(

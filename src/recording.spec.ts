@@ -7,8 +7,8 @@ import Axios from 'axios'
 import GetPort from 'get-port'
 import Tmp from 'tmp-promise'
 
-import { InventoryRepository } from './inventory'
-import { withRecordingProxy } from './recording'
+import { InventoryRepository } from './inventory.js'
+import { withRecordingProxy } from './recording.js'
 
 test('RecordingProxy', async (t) => {
   await Tmp.withDir(
@@ -45,6 +45,8 @@ test('RecordingProxy', async (t) => {
 
       const inventory = await inventoryRepository.loadInventory()
       t.is(inventory.resources.length, 1)
+
+      server.close()
     },
     { unsafeCleanup: true }
   )

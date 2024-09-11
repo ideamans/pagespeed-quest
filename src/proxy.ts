@@ -8,9 +8,9 @@ import Path from 'path'
 import GetPort from 'get-port'
 import HttpMitmProxy from 'http-mitm-proxy'
 
-import { InventoryRepository } from './inventory'
-import { logger } from './logger'
-import { Throttle, ThrottlingTransform } from './throttling'
+import { InventoryRepository } from './inventory.js'
+import { logger } from './logger.js'
+import { Throttle, ThrottlingTransform } from './throttling.js'
 
 export interface ProxyOptions extends HttpMitmProxy.IProxyOptions {
   inventoryRepository?: InventoryRepository

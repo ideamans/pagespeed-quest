@@ -1,7 +1,7 @@
-import { HttpHeaders } from './http'
-import { Inventory } from './inventory'
-import { logger } from './logger'
-import { Proxy, withProxy, WithProxyOptions } from './proxy'
+import { HttpHeaders } from './http.js'
+import { Inventory } from './inventory.js'
+import { logger } from './logger.js'
+import { Proxy, withProxy, WithProxyOptions } from './proxy.js'
 
 const ChunkSize = 1024 * 16
 

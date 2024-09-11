@@ -1,12 +1,12 @@
 import Fsp from 'fs/promises'
 
-import Execa from 'execa'
+import { execa } from 'execa'
 
-import { withPlaybackProxy } from './playback'
-import { withRecordingProxy } from './recording'
+import { withPlaybackProxy } from './playback.js'
+import { withRecordingProxy } from './recording.js'
 
 async function runLighthouse(url: string, port: number) {
-  await Execa('./node_modules/.bin/lighthouse', [
+  await execa('./node_modules/.bin/lighthouse', [
     '--output=html',
     '--output-path=tmp/lighthouse.html',
     '--only-categories=performance',

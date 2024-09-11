@@ -1,6 +1,6 @@
 import test from 'ava'
 
-import { compress, decompress } from './encoding'
+import { compress, decompress } from './encoding.js'
 
 test('Gzip encoding', async (t) => {
   const original = Buffer.from('x'.repeat(1000))

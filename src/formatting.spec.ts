@@ -1,7 +1,7 @@
 import test from 'ava'
 import IconvLite from 'iconv-lite'
 
-import { convertEditableText, ensureUtf8String } from './formatting'
+import { convertEditableText, ensureUtf8String } from './formatting.js'
 
 test('tryToNormalizeAsUtf8', (t) => {
   {
