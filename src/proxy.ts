@@ -9,8 +9,8 @@ import GetPort from 'get-port'
 import HttpMitmProxy from 'http-mitm-proxy'
 
 import { InventoryRepository } from './inventory.js'
-import { logger } from './logger.js'
 import { Throttle, ThrottlingTransform } from './throttling.js'
+import { DependencyInterface } from './types.js'
 
 export interface ProxyOptions extends HttpMitmProxy.IProxyOptions {
   inventoryRepository?: InventoryRepository
@@ -19,6 +19,8 @@ export interface ProxyOptions extends HttpMitmProxy.IProxyOptions {
   entryUrl?: string
 }
 
+export type ProxyDependency = Pick<DependencyInterface, 'logger'>
+
 export abstract class Proxy {
   proxyOptions!: HttpMitmProxy.IProxyOptions
   proxy!: HttpMitmProxy.IProxy
@@ -26,16 +28,18 @@ export abstract class Proxy {
   throttle?: Throttle
   throttlingRetryIntervalMs!: number
   entryUrl?: string
+  dependency: ProxyDependency
 
-  constructor(options?: ProxyOptions) {
+  constructor(options?: ProxyOptions, dependency?: ProxyDependency) {
     options ||= {}
+    this.dependency = dependency || {}
 
     // Proxy
     this.proxyOptions = options
     this.proxy = HttpMitmProxy()
 
     // Inventory repository
-    this.inventoryRepository = options.inventoryRepository ?? new InventoryRepository()
+    this.inventoryRepository = options.inventoryRepository ?? new InventoryRepository(undefined, this.dependency)
 
     // Throttle
     if (options.throttle) this.throttle = options.throttle
@@ -96,6 +100,8 @@ export abstract class Proxy {
     await new Promise<void>((resolve, reject) =>
       this.proxy.listen(options, (error) => (error ? reject(error) : resolve()))
     )
+
+    this.dependency.logger?.info(`Proxy started to listening on port ${this.port}`)
   }
 
   get port(): number {
@@ -110,48 +116,51 @@ export abstract class Proxy {
     this.proxy.close()
     await this.shutdown()
     if (this.throttle) this.throttle.stop()
+    this.dependency.logger?.info(`Proxy stopped`)
   }
 }
 
-export interface WithProxyOptions extends HttpMitmProxy.IProxyOptions {
-  port?: number
-  dirPath?: string
-  entryUrl?: string
-  throttling?: { mbps: number; flushIntervalMs?: number; retryIntervalMs?: number }
-}
-
-export async function withProxy<ProxyType extends Proxy, OptionsType extends WithProxyOptions = WithProxyOptions>(
-  cls: new (options: ProxyOptions) => ProxyType,
-  fn: (proxy: ProxyType) => Promise<void>,
-  options: OptionsType
-): Promise<ProxyType | void> {
-  const proxyOptions: ProxyOptions = {
-    ...options,
-    inventoryRepository: new InventoryRepository(options?.dirPath),
-  }
-
-  if (options.throttling) {
-    proxyOptions.throttle = Throttle.fromMbps(options.throttling.mbps, options.throttling.flushIntervalMs)
-    proxyOptions.throttlingRetryIntervalMs = options.throttling.retryIntervalMs
-  }
-
-  const proxy = new cls(proxyOptions)
-
-  // start
-  try {
-    await proxy.start()
-    logger().info(`Proxy started to listening on port ${proxy.port}`)
-  } catch (err) {
-    logger().fatal({ err }, `Failed to start the proxy: ${err.message}`)
-    return
-  }
-
-  // callback
+export async function withProxy<ProxyType extends Proxy>(
+  proxy: ProxyType,
+  fn: (proxy: ProxyType) => Promise<void>
+): Promise<void> {
+  await proxy.start()
   await fn(proxy)
-
-  // stop
   await proxy.stop()
-  logger().info(`Proxy stopped`)
-
-  return proxy
 }
+
+// export interface WithProxyOptions extends HttpMitmProxy.IProxyOptions {
+//   port?: number
+//   dirPath?: string
+//   entryUrl?: string
+//   throttling?: { mbps: number; flushIntervalMs?: number; retryIntervalMs?: number }
+// }
+
+// export async function withProxy<ProxyType extends Proxy, OptionsType extends WithProxyOptions = WithProxyOptions>(
+//   cls: new (options: ProxyOptions) => ProxyType,
+//   fn: (proxy: ProxyType) => Promise<void>,
+//   options: OptionsType
+// ): Promise<ProxyType | void> {
+//   const proxyOptions: ProxyOptions = {
+//     ...options,
+//     inventoryRepository: new InventoryRepository(options?.dirPath),
+//   }
+
+//   if (options.throttling) {
+//     proxyOptions.throttle = Throttle.fromMbps(options.throttling.mbps, options.throttling.flushIntervalMs)
+//     proxyOptions.throttlingRetryIntervalMs = options.throttling.retryIntervalMs
+//   }
+
+//   const proxy = new cls(proxyOptions)
+
+//   // start
+//   await proxy.start()
+
+//   // callback
+//   await fn(proxy)
+
+//   // stop
+//   await proxy.stop()
+
+//   return proxy
+// }

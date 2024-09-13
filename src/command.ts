@@ -6,12 +6,14 @@ import Watch from 'node-watch'
 import { Dependency } from './dependency.js'
 import { execLighthouse } from './lighthouse.js'
 import { execLoadshow } from './loadshow.js'
+import { Throttle } from './throttling.js'
 import { FormFactorType } from './types.js'
 
-import { logger, withPlaybackProxy, WithProxyOptions, withRecordingProxy } from './index.js'
+import { InventoryRepository, ProxyOptions, withPlaybackProxy, withRecordingProxy } from './index.js'
 
 const main = new Command()
 const dependency = new Dependency()
+const defaultInventoryRepository = new InventoryRepository('./inventory', dependency)
 
 function lighthouseCommands() {
   const lighthouse = main.command('lighthouse')
@@ -23,13 +25,15 @@ function lighthouseCommands() {
   recording.argument('<url>', 'Url to measure performance')
   recording.action(async (url: string) => {
     await withRecordingProxy(
+      {
+        entryUrl: url,
+        inventoryRepository: defaultInventoryRepository,
+      },
+      dependency,
       async (proxy) => {
         const formFactor: FormFactorType = lighthouse.opts().formFactor
         await execLighthouse({ url, proxyPort: proxy.port, formFactor, noThrottling: true, view: false }, dependency)
-        logger().info('Lighthouse completed. Saving inventory...')
-      },
-      {
-        entryUrl: url,
+        dependency.logger?.info('Lighthouse completed. Saving inventory...')
       }
     )
   })
@@ -41,15 +45,14 @@ function lighthouseCommands() {
     const cpuMultiplier: string = playback.opts().cpuMultiplier
     const formFactor: FormFactorType = lighthouse.opts().formFactor
     await withPlaybackProxy(
+      {
+        inventoryRepository: defaultInventoryRepository,
+      },
+      dependency,
       async (proxy) => {
         const url = proxy.entryUrl
         await execLighthouse({ url, proxyPort: proxy.port, formFactor, cpuMultiplier, view: true }, dependency)
-        logger().info('Lighthouse completed')
-      },
-      {
-        // throttling: {
-        //   mbps: 1.6,
-        // },
+        dependency.logger?.info('Lighthouse completed')
       }
     )
   })
@@ -66,12 +69,11 @@ function loadshowCommands() {
   recording.action(async (url: string) => {
     const formFactor: FormFactorType = recording.opts().formFactor
     await withRecordingProxy(
+      { entryUrl: url, inventoryRepository: defaultInventoryRepository },
+      dependency,
       async (proxy) => {
         await execLoadshow({ url, proxyPort: proxy.port, formFactor }, dependency)
-        logger().info('Loadshow completed. Saving inventory...')
-      },
-      {
-        entryUrl: url,
+        dependency.logger?.info('Loadshow completed. Saving inventory...')
       }
     )
   })
@@ -83,15 +85,14 @@ function loadshowCommands() {
     const lighthouse: boolean = playback.opts().lighthouse
     const formFactor: FormFactorType = loadshow.opts().formFactor
     await withPlaybackProxy(
+      {
+        inventoryRepository: defaultInventoryRepository,
+      },
+      dependency,
       async (proxy) => {
         const url = proxy.entryUrl
         await execLoadshow({ url, proxyPort: proxy.port, formFactor, syncLighthouseSpec: lighthouse }, dependency)
-        logger().info('Loadshow completed')
-      },
-      {
-        // throttling: {
-        //   mbps: 10,
-        // },
+        dependency.logger?.info('Loadshow completed')
       }
     )
   })
@@ -99,39 +100,32 @@ function loadshowCommands() {
 
 function proxyCommands() {
   const proxy = main.command('proxy')
-  proxy.option('-d, --inventory-dir <path>', 'Inventory directory')
   proxy.option('-p, --port <number>', 'Proxy port', '8080')
   proxy.option('-t, --throughput <number>', 'Throttle network throughput (Mbps)')
 
   proxy.action(async () => {
-    const proxyOptions: WithProxyOptions = {}
-
-    if (proxy.opts().inventoryDir) {
-      proxyOptions.dirPath = proxy.opts().inventoryDir
-    }
+    const proxyOptions: ProxyOptions = {}
 
     if (proxy.opts().port) {
       proxyOptions.port = Number(proxy.opts().port)
     }
 
     if (proxy.opts().throughput) {
-      proxyOptions.throttling = {
-        mbps: Number(proxy.opts().throughput),
-      }
+      proxyOptions.throttle = Throttle.fromMbps(Number(proxy.opts().throughput))
     }
 
     // eslint-disable-next-line no-constant-condition
     while (true) {
-      await withPlaybackProxy(async (proxy) => {
+      await withPlaybackProxy(proxyOptions, dependency, async (proxy) => {
         const watcher = Watch(proxy.inventoryDirPath, { recursive: true })
         return new Promise((ok) => {
           watcher.on('change', () => {
             watcher.close()
-            logger().info('Inventory changed. Restarting proxy...')
+            dependency.logger?.info('Inventory changed. Restarting proxy...')
             ok()
           })
         })
-      }, proxyOptions)
+      })
     }
   })
 }

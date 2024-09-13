@@ -5,7 +5,7 @@ import Path from 'path'
 import { compress, ContentEncodingType, decompress } from './encoding.js'
 import { convertEditableText, isText } from './formatting.js'
 import { HttpHeaders, parseContentTypeHeader, requestContentFilePath, stringifyContentTypeHeader } from './http.js'
-import { logger } from './logger.js'
+import { DependencyInterface } from './types.js'
 
 const InventoryDir = 'inventory'
 const IndexFile = 'index.json'
@@ -41,11 +41,15 @@ export interface Inventory {
   resources: Resource[]
 }
 
+type InventoryRepositoryDependency = Pick<DependencyInterface, 'logger'>
+
 export class InventoryRepository {
   dirPath!: string
+  dependency: InventoryRepositoryDependency
 
-  constructor(dirPath?: string) {
+  constructor(dirPath?: string, dependency?: InventoryRepositoryDependency) {
     this.dirPath = dirPath || Path.join(process.cwd(), InventoryDir)
+    this.dependency = dependency || {}
   }
 
   async saveInventory(inventory: Inventory) {
@@ -125,7 +129,7 @@ export class InventoryRepository {
             )
             resource.contentTypeCharset = 'utf-8'
           } catch (err) {
-            logger().error({ err, resource }, `Formatting failed ${transaction.url}: ${err.message}`)
+            this.dependency.logger?.error({ err, resource }, `Formatting failed ${transaction.url}: ${err.message}`)
           }
         }
 
@@ -142,7 +146,7 @@ export class InventoryRepository {
       try {
         await saveTransaction(transaction)
       } catch (err) {
-        logger().error(
+        this.dependency.logger?.error(
           { err, method: transaction.method, url: transaction.url },
           `Failed to save transaction ${transaction.url}: ${err.message}`
         )
@@ -216,7 +220,7 @@ export class InventoryRepository {
       try {
         await loadTransaction(resource)
       } catch (err) {
-        logger().error({ err, resource }, `Loading transaction failed ${resource.url}: ${err.message}`)
+        this.dependency.logger?.error({ err, resource }, `Loading transaction failed ${resource.url}: ${err.message}`)
       }
     }
 

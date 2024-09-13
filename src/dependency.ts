@@ -8,6 +8,19 @@ import { DependencyInterface } from './types.js'
 export class Dependency implements DependencyInterface {
   logger?: Pino.Logger
 
+  constructor() {
+    this.logger = Pino({
+      level: process.env.LOG_LEVEL || 'info',
+      transport: {
+        target: 'pino-pretty',
+        options: {
+          colorize: true,
+          ignore: 'pid,hostname',
+        },
+      },
+    })
+  }
+
   async mkdirp(dirPath: string): Promise<void> {
     await Fsp.mkdir(dirPath, { recursive: true })
   }
