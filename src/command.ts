@@ -1,56 +1,17 @@
 #!/usr/bin/env node
 
-import Fsp from 'fs/promises'
-
 import { Command } from 'commander'
-import { execa } from 'execa'
 import Watch from 'node-watch'
+
+import { Dependency } from './dependency.js'
+import { execLighthouse } from './lighthouse.js'
+import { execLoadshow } from './loadshow.js'
+import { FormFactorType } from './types.js'
 
 import { logger, withPlaybackProxy, WithProxyOptions, withRecordingProxy } from './index.js'
 
-type FormFactorType = 'mobile' | 'desktop'
-
-interface LighthouseOptions {
-  url: string
-  proxyPort: number
-  cpuMultiplier?: string
-  formFactor?: FormFactorType
-  noThrottling?: boolean
-  view?: boolean
-}
-
-async function runLighthouse(opts: LighthouseOptions) {
-  await Fsp.mkdir('./artifacts', { recursive: true })
-
-  const formFactor = opts.formFactor || 'mobile'
-  const args: string[] = [
-    opts.url,
-    '--save-assets',
-    '--output=html,json',
-    '--output-path=./artifacts/lighthouse',
-    '--only-categories=performance',
-    `--form-factor=${formFactor}`,
-  ]
-
-  if (opts.noThrottling) {
-    args.push(
-      '--throttling.rttMs=0',
-      '--throttling.throughputKbps=0',
-      '--throttling.downloadThroughputKbps=0',
-      '--throttling.uploadThroughputKbps=0',
-      '--throttling.cpuSlowdownMultiplier=1'
-    )
-  } else if (opts.cpuMultiplier) args.push(`--throttling.cpuSlowdownMultiplier=${opts.cpuMultiplier}`)
-
-  const chromeFlags: string[] = ['--ignore-certificate-errors', `--proxy-server=http://localhost:${opts.proxyPort}`]
-  args.push(`--chrome-flags="${chromeFlags.join(' ')}"`)
-
-  if (opts.view) args.push('--view')
-
-  await execa('./node_modules/.bin/lighthouse', args)
-}
-
 const main = new Command()
+const dependency = new Dependency()
 
 function lighthouseCommands() {
   const lighthouse = main.command('lighthouse')
@@ -64,7 +25,7 @@ function lighthouseCommands() {
     await withRecordingProxy(
       async (proxy) => {
         const formFactor: FormFactorType = lighthouse.opts().formFactor
-        await runLighthouse({ url, proxyPort: proxy.port, formFactor, noThrottling: true, view: false })
+        await execLighthouse({ url, proxyPort: proxy.port, formFactor, noThrottling: true, view: false }, dependency)
         logger().info('Lighthouse completed. Saving inventory...')
       },
       {
@@ -78,16 +39,59 @@ function lighthouseCommands() {
   playback.option('-c, --cpu-multiplier <number>', 'Lighthouse CPU multiplier', '4')
   playback.action(async () => {
     const cpuMultiplier: string = playback.opts().cpuMultiplier
+    const formFactor: FormFactorType = lighthouse.opts().formFactor
     await withPlaybackProxy(
       async (proxy) => {
         const url = proxy.entryUrl
-        await runLighthouse({ url, proxyPort: proxy.port, cpuMultiplier, view: true })
+        await execLighthouse({ url, proxyPort: proxy.port, formFactor, cpuMultiplier, view: true }, dependency)
         logger().info('Lighthouse completed')
       },
       {
-        throttling: {
-          mbps: 1.6,
-        },
+        // throttling: {
+        //   mbps: 1.6,
+        // },
+      }
+    )
+  })
+}
+
+function loadshowCommands() {
+  const loadshow = main.command('loadshow')
+  loadshow.description('Run loadshow via a proxy')
+  loadshow.option('-f, --form-factor <mobile|desktop>', 'Lighthouse form factor', 'mobile')
+
+  const recording = loadshow.command('recording')
+  recording.description('Record contents by loadshow')
+  recording.argument('<url>', 'Url to measure performance')
+  recording.action(async (url: string) => {
+    const formFactor: FormFactorType = recording.opts().formFactor
+    await withRecordingProxy(
+      async (proxy) => {
+        await execLoadshow({ url, proxyPort: proxy.port, formFactor }, dependency)
+        logger().info('Loadshow completed. Saving inventory...')
+      },
+      {
+        entryUrl: url,
+      }
+    )
+  })
+
+  const playback = loadshow.command('playback')
+  playback.description('Playback contents for loadshow')
+  playback.option('-l, --lighthouse', 'Run with lighthouse throttling')
+  playback.action(async () => {
+    const lighthouse: boolean = playback.opts().lighthouse
+    const formFactor: FormFactorType = loadshow.opts().formFactor
+    await withPlaybackProxy(
+      async (proxy) => {
+        const url = proxy.entryUrl
+        await execLoadshow({ url, proxyPort: proxy.port, formFactor, syncLighthouseSpec: lighthouse }, dependency)
+        logger().info('Loadshow completed')
+      },
+      {
+        // throttling: {
+        //   mbps: 10,
+        // },
       }
     )
   })
@@ -133,6 +137,7 @@ function proxyCommands() {
 }
 
 lighthouseCommands()
+loadshowCommands()
 proxyCommands()
 
 main.parse(process.argv)
