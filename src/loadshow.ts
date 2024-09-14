@@ -41,7 +41,7 @@ function execSpecToCommandArgs(spec: ExecLoadshowSpec): string[] {
   if (spec.proxyPort !== undefined) {
     chromeArgs.push(`--proxy-server=http://localhost:${spec.proxyPort}`)
   }
-  args.push('-u', 'recording.puppeteer.args=' + chromeArgs.join(' '))
+  args.push('-u', 'recording.puppeteer.args=' + chromeArgs.join(','))
 
   return args
 }
@@ -81,7 +81,7 @@ export async function execLoadshow(
   }
 
   const args: string[] = []
-  args.push('record', '-a', './artifacts/loadshow')
+  args.push('record')
   args.push(...execSpecToCommandArgs(spec))
   args.push(input.url, './artifacts/loadshow.mp4')
 
