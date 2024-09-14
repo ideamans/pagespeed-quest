@@ -6,8 +6,7 @@ import Watch from 'node-watch'
 import { Dependency } from './dependency.js'
 import { execLighthouse } from './lighthouse.js'
 import { execLoadshow } from './loadshow.js'
-import { Throttle } from './throttling.js'
-import { FormFactorType } from './types.js'
+import { DeviceType } from './types.js'
 
 import { InventoryRepository, ProxyOptions, withPlaybackProxy, withRecordingProxy } from './index.js'
 
@@ -15,24 +14,25 @@ const main = new Command()
 const dependency = new Dependency()
 const defaultInventoryRepository = new InventoryRepository('./inventory', dependency)
 
-function lighthouseCommands() {
+function registerLighthouseCommands(main: Command) {
   const lighthouse = main.command('lighthouse')
   lighthouse.description('Run Lighthouse (performance category) via a proxy')
-  lighthouse.option('-f, --form-factor <mobile|desktop>', 'Lighthouse form factor', 'mobile')
 
   const recording = lighthouse.command('recording')
   recording.description('Record contents by lighthouse')
+  recording.option('-d, --device <mobile|desktop>', 'Device type', 'mobile')
   recording.argument('<url>', 'Url to measure performance')
   recording.action(async (url: string) => {
+    const deviceType: DeviceType = recording.opts().device || 'mobile'
     await withRecordingProxy(
       {
         entryUrl: url,
+        deviceType,
         inventoryRepository: defaultInventoryRepository,
       },
       dependency,
       async (proxy) => {
-        const formFactor: FormFactorType = lighthouse.opts().formFactor
-        await execLighthouse({ url, proxyPort: proxy.port, formFactor, noThrottling: true, view: false }, dependency)
+        await execLighthouse({ url, proxyPort: proxy.port, deviceType, noThrottling: true, view: false }, dependency)
         dependency.logger?.info('Lighthouse completed. Saving inventory...')
       }
     )
@@ -40,39 +40,38 @@ function lighthouseCommands() {
 
   const playback = lighthouse.command('playback')
   playback.description('Playback contents for lighthouse')
-  playback.option('-c, --cpu-multiplier <number>', 'Lighthouse CPU multiplier', '4')
   playback.action(async () => {
-    const cpuMultiplier: string = playback.opts().cpuMultiplier
-    const formFactor: FormFactorType = lighthouse.opts().formFactor
     await withPlaybackProxy(
       {
         inventoryRepository: defaultInventoryRepository,
       },
       dependency,
       async (proxy) => {
-        const url = proxy.entryUrl
-        await execLighthouse({ url, proxyPort: proxy.port, formFactor, cpuMultiplier, view: true }, dependency)
+        await execLighthouse(
+          { url: proxy.entryUrl, proxyPort: proxy.port, deviceType: proxy.deviceType, view: true },
+          dependency
+        )
         dependency.logger?.info('Lighthouse completed')
       }
     )
   })
 }
 
-function loadshowCommands() {
+function registerLoadshowCommands(main: Command) {
   const loadshow = main.command('loadshow')
   loadshow.description('Run loadshow via a proxy')
-  loadshow.option('-f, --form-factor <mobile|desktop>', 'Lighthouse form factor', 'mobile')
 
   const recording = loadshow.command('recording')
   recording.description('Record contents by loadshow')
+  recording.option('-d, --device <mobile|desktop>', 'Device type', 'mobile')
   recording.argument('<url>', 'Url to measure performance')
   recording.action(async (url: string) => {
-    const formFactor: FormFactorType = recording.opts().formFactor
+    const deviceType: DeviceType = recording.opts().device || 'mobile'
     await withRecordingProxy(
-      { entryUrl: url, inventoryRepository: defaultInventoryRepository },
+      { entryUrl: url, deviceType, inventoryRepository: defaultInventoryRepository },
       dependency,
       async (proxy) => {
-        await execLoadshow({ url, proxyPort: proxy.port, formFactor }, dependency)
+        await execLoadshow({ url, proxyPort: proxy.port, deviceType }, dependency)
         dependency.logger?.info('Loadshow completed. Saving inventory...')
       }
     )
@@ -80,44 +79,39 @@ function loadshowCommands() {
 
   const playback = loadshow.command('playback')
   playback.description('Playback contents for loadshow')
-  playback.option('-l, --lighthouse', 'Run with lighthouse throttling')
+  playback.option('-l, --lighthouse', 'Loadshow with lighthouse throttling')
   playback.action(async () => {
     const lighthouse: boolean = playback.opts().lighthouse
-    const formFactor: FormFactorType = loadshow.opts().formFactor
     await withPlaybackProxy(
       {
         inventoryRepository: defaultInventoryRepository,
       },
       dependency,
       async (proxy) => {
-        const url = proxy.entryUrl
-        await execLoadshow({ url, proxyPort: proxy.port, formFactor, syncLighthouseSpec: lighthouse }, dependency)
+        await execLoadshow(
+          { url: proxy.entryUrl, proxyPort: proxy.port, deviceType: proxy.deviceType, syncLighthouseSpec: lighthouse },
+          dependency
+        )
         dependency.logger?.info('Loadshow completed')
       }
     )
   })
 }
 
-function proxyCommands() {
+function registerProxyCommands(main: Command) {
   const proxy = main.command('proxy')
   proxy.option('-p, --port <number>', 'Proxy port', '8080')
-  proxy.option('-t, --throughput <number>', 'Throttle network throughput (Mbps)')
 
   proxy.action(async () => {
-    const proxyOptions: ProxyOptions = {}
-
-    if (proxy.opts().port) {
-      proxyOptions.port = Number(proxy.opts().port)
-    }
-
-    if (proxy.opts().throughput) {
-      proxyOptions.throttle = Throttle.fromMbps(Number(proxy.opts().throughput))
+    const proxyOptions: ProxyOptions = {
+      inventoryRepository: defaultInventoryRepository,
+      port: Number(proxy.opts().port || '8080'),
     }
 
     // eslint-disable-next-line no-constant-condition
     while (true) {
-      await withPlaybackProxy(proxyOptions, dependency, async (proxy) => {
-        const watcher = Watch(proxy.inventoryDirPath, { recursive: true })
+      await withPlaybackProxy(proxyOptions, dependency, async () => {
+        const watcher = Watch(defaultInventoryRepository.dirPath, { recursive: true })
         return new Promise((ok) => {
           watcher.on('change', () => {
             watcher.close()
@@ -130,8 +124,8 @@ function proxyCommands() {
   })
 }
 
-lighthouseCommands()
-loadshowCommands()
-proxyCommands()
+registerLighthouseCommands(main)
+registerLoadshowCommands(main)
+registerProxyCommands(main)
 
 main.parse(process.argv)

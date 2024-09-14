@@ -11,6 +11,8 @@ test('Save and load inventory', async (t) => {
     async (tmp) => {
       const inventoryRepository = new InventoryRepository(tmp.path)
       const saving: Inventory = {
+        entryUrl: 'http://example.com/',
+        deviceType: 'desktop',
         resources: [
           {
             method: 'get',
@@ -132,4 +134,59 @@ test('Transactions and resources', async (t) => {
     },
     { unsafeCleanup: true }
   )
+})
+
+test('contentUtf8 and contentBase64', async (t) => {
+  await Tmp.withDir(async (tmp) => {
+    const inventoryRepository = new InventoryRepository(tmp.path)
+    const inventory: Inventory = {
+      resources: [
+        {
+          method: 'get',
+          url: 'http://example.com/',
+          ttfbMs: 100,
+          statusCode: 200,
+          rawHeaders: {
+            'content-type': 'text/html; charset=utf-8',
+          },
+          contentUtf8: '<html><body>Hello World</body></html>',
+        },
+        {
+          method: 'get',
+          url: 'http://example.com/hello',
+          ttfbMs: 100,
+          statusCode: 200,
+          rawHeaders: {
+            'content-type': 'text/plain',
+          },
+          contentBase64: 'aGVsbG8K', // hello
+        },
+      ],
+    }
+
+    const transactions = await inventoryRepository.loadTransactions(inventory.resources)
+
+    t.deepEqual(transactions, [
+      {
+        method: 'get',
+        url: 'http://example.com/',
+        ttfbMs: 100,
+        statusCode: 200,
+        errorMessage: undefined,
+        rawHeaders: { 'content-length': '37', 'content-type': 'text/html; charset=utf-8' },
+        durationMs: 0,
+        content: Buffer.from('<html><body>Hello World</body></html>'),
+      },
+      {
+        method: 'get',
+        url: 'http://example.com/hello',
+        ttfbMs: 100,
+        statusCode: 200,
+        errorMessage: undefined,
+        rawHeaders: { 'content-length': '6', 'content-type': 'text/plain' },
+        durationMs: 0,
+        content: Buffer.from('hello\n'),
+      },
+    ])
+  })
 })

@@ -5,7 +5,7 @@ import Path from 'path'
 import { compress, ContentEncodingType, decompress } from './encoding.js'
 import { convertEditableText, isText } from './formatting.js'
 import { HttpHeaders, parseContentTypeHeader, requestContentFilePath, stringifyContentTypeHeader } from './http.js'
-import { DependencyInterface } from './types.js'
+import { DependencyInterface, DeviceType } from './types.js'
 
 const InventoryDir = 'inventory'
 const IndexFile = 'index.json'
@@ -22,6 +22,8 @@ export interface Resource {
   contentTypeMime?: string
   contentTypeCharset?: string
   contentFilePath?: string
+  contentUtf8?: string
+  contentBase64?: string
   minify?: boolean
 }
 
@@ -38,6 +40,7 @@ export interface Transaction {
 
 export interface Inventory {
   entryUrl?: string
+  deviceType?: DeviceType
   resources: Resource[]
 }
 
@@ -179,27 +182,35 @@ export class InventoryRepository {
       }
 
       // content
-      if (resource.contentFilePath) {
+      let content: Buffer | undefined
+
+      if (resource.contentUtf8) {
+        content = Buffer.from(resource.contentUtf8)
+      } else if (resource.contentBase64) {
+        content = Buffer.from(resource.contentBase64, 'base64')
+      } else if (resource.contentFilePath) {
         const fullPath = Path.join(this.dirPath, resource.contentFilePath)
         if (Fs.existsSync(fullPath)) {
-          const content = await Fsp.readFile(fullPath)
-
-          // encoding
-          if (resource.contentEncoding) {
-            transaction.content = await compress(resource.contentEncoding, content)
-            transaction.rawHeaders['content-encoding'] = resource.contentEncoding
-          } else {
-            transaction.content = content
-            delete transaction.rawHeaders['content-encoding']
-          }
-
-          // length
-          transaction.rawHeaders['content-length'] = `${transaction.content.length}`
-
-          // duration
-          const bytesPerMs = resource.mbps ? (resource.mbps * 1024 * 1024) / 8 / 1000 : 0
-          transaction.durationMs = bytesPerMs ? content.length / bytesPerMs : 0
+          content = await Fsp.readFile(fullPath)
         }
+      }
+
+      if (content) {
+        // encoding
+        if (resource.contentEncoding) {
+          transaction.content = await compress(resource.contentEncoding, content)
+          transaction.rawHeaders['content-encoding'] = resource.contentEncoding
+        } else {
+          transaction.content = content
+          delete transaction.rawHeaders['content-encoding']
+        }
+
+        // length
+        transaction.rawHeaders['content-length'] = `${transaction.content.length}`
+
+        // duration
+        const bytesPerMs = resource.mbps ? (resource.mbps * 1024 * 1024) / 8 / 1000 : 0
+        transaction.durationMs = bytesPerMs ? content.length / bytesPerMs : 0
       } else {
         transaction.rawHeaders['content-length'] = '0'
         transaction.durationMs = 0

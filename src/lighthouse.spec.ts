@@ -29,7 +29,7 @@ test('lighthouse - desktop', async (t) => {
   const input: ExecLighthouseInput = {
     url: 'https://example.com',
     proxyPort: 8080,
-    formFactor: 'desktop',
+    deviceType: 'desktop',
   }
   await execLighthouse(input, {
     mkdirp: async (path: string) => {

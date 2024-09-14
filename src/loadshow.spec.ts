@@ -75,7 +75,7 @@ test('loadshow - desktop', async (t) => {
   const spec: ExecLoadshowInput = {
     url: 'https://example.com',
     proxyPort: 8080,
-    formFactor: 'desktop',
+    deviceType: 'desktop',
   }
   execLoadshow(spec, {
     mkdirp: async (path: string) => {
@@ -107,7 +107,7 @@ test('loadshow - desktop - lighthouse', async (t) => {
   const spec: ExecLoadshowInput = {
     url: 'https://example.com',
     proxyPort: 8080,
-    formFactor: 'desktop',
+    deviceType: 'desktop',
     syncLighthouseSpec: true,
   }
   execLoadshow(spec, {

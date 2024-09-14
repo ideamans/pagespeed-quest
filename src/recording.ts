@@ -121,7 +121,7 @@ export class RecordingProxy extends Proxy {
     }
 
     const resources = await this.inventoryRepository.saveTransactions(transactions)
-    const inventory: Inventory = { entryUrl: this.entryUrl, resources }
+    const inventory: Inventory = { entryUrl: this.entryUrl, deviceType: this.deviceType, resources }
     await this.inventoryRepository.saveInventory(inventory)
   }
 

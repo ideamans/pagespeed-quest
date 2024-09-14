@@ -1,11 +1,11 @@
 import { defaultConfig, desktopConfig } from 'lighthouse'
 
-import { DependencyInterface, FormFactorType } from './types.js'
+import { DependencyInterface, DeviceType } from './types.js'
 
 export interface ExecLoadshowInput {
   url: string
   proxyPort: number
-  formFactor?: FormFactorType
+  deviceType?: DeviceType
   noThrottling?: boolean
   syncLighthouseSpec?: boolean
 }
@@ -53,25 +53,25 @@ export async function execLoadshow(
   await dependency.mkdirp('./artifacts/loadshow')
 
   // By form factor
-  const lighthouseByFormFactor = input.formFactor === 'desktop' ? desktopConfig : defaultConfig
-  const customByFormFactor = input.formFactor === 'desktop' ? { columns: 2 } : { columns: 3 }
+  const lighthouseByDevice = input.deviceType === 'desktop' ? desktopConfig : defaultConfig
+  const customByDevice = input.deviceType === 'desktop' ? { columns: 2 } : { columns: 3 }
 
   // Basic spec
-  const userAgent = lighthouseByFormFactor.settings?.emulatedUserAgent
+  const userAgent = lighthouseByDevice.settings?.emulatedUserAgent
   const spec: ExecLoadshowSpec = {
     proxyPort: input.proxyPort,
-    columns: customByFormFactor.columns,
-    viewportWidth: lighthouseByFormFactor.settings?.screenEmulation?.width,
-    cpuThrottling: lighthouseByFormFactor.settings?.throttling?.cpuSlowdownMultiplier,
+    columns: customByDevice.columns,
+    viewportWidth: lighthouseByDevice.settings?.screenEmulation?.width,
+    cpuThrottling: lighthouseByDevice.settings?.throttling?.cpuSlowdownMultiplier,
     userAgent: typeof userAgent === 'string' ? userAgent : undefined,
   }
 
   // Sync network conditions with Lighthouse
   if (input.syncLighthouseSpec) {
-    if (lighthouseByFormFactor.settings?.throttling?.rttMs)
-      spec.networkLatencyMs = lighthouseByFormFactor.settings?.throttling?.rttMs
-    if (lighthouseByFormFactor.settings?.throttling?.throughputKbps)
-      spec.networkThroughputMbps = lighthouseByFormFactor.settings?.throttling?.throughputKbps / 1024
+    if (lighthouseByDevice.settings?.throttling?.rttMs)
+      spec.networkLatencyMs = lighthouseByDevice.settings?.throttling?.rttMs
+    if (lighthouseByDevice.settings?.throttling?.throughputKbps)
+      spec.networkThroughputMbps = lighthouseByDevice.settings?.throttling?.throughputKbps / 1024
   }
 
   // No throttling

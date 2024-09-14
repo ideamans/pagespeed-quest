@@ -10,13 +10,14 @@ import HttpMitmProxy from 'http-mitm-proxy'
 
 import { InventoryRepository } from './inventory.js'
 import { Throttle, ThrottlingTransform } from './throttling.js'
-import { DependencyInterface } from './types.js'
+import { DependencyInterface, DeviceType } from './types.js'
 
 export interface ProxyOptions extends HttpMitmProxy.IProxyOptions {
   inventoryRepository?: InventoryRepository
   throttle?: Throttle
   throttlingRetryIntervalMs?: number
   entryUrl?: string
+  deviceType?: DeviceType
 }
 
 export type ProxyDependency = Pick<DependencyInterface, 'logger'>
@@ -28,6 +29,7 @@ export abstract class Proxy {
   throttle?: Throttle
   throttlingRetryIntervalMs!: number
   entryUrl?: string
+  deviceType?: DeviceType
   dependency: ProxyDependency
 
   constructor(options?: ProxyOptions, dependency?: ProxyDependency) {
@@ -47,6 +49,9 @@ export abstract class Proxy {
 
     // Entry URL
     this.entryUrl = options.entryUrl
+
+    // Device type
+    this.deviceType = options.deviceType
   }
 
   static contextRequest(ctx: HttpMitmProxy.IContext): { method: string; url: string } {
@@ -128,39 +133,3 @@ export async function withProxy<ProxyType extends Proxy>(
   await fn(proxy)
   await proxy.stop()
 }
-
-// export interface WithProxyOptions extends HttpMitmProxy.IProxyOptions {
-//   port?: number
-//   dirPath?: string
-//   entryUrl?: string
-//   throttling?: { mbps: number; flushIntervalMs?: number; retryIntervalMs?: number }
-// }
-
-// export async function withProxy<ProxyType extends Proxy, OptionsType extends WithProxyOptions = WithProxyOptions>(
-//   cls: new (options: ProxyOptions) => ProxyType,
-//   fn: (proxy: ProxyType) => Promise<void>,
-//   options: OptionsType
-// ): Promise<ProxyType | void> {
-//   const proxyOptions: ProxyOptions = {
-//     ...options,
-//     inventoryRepository: new InventoryRepository(options?.dirPath),
-//   }
-
-//   if (options.throttling) {
-//     proxyOptions.throttle = Throttle.fromMbps(options.throttling.mbps, options.throttling.flushIntervalMs)
-//     proxyOptions.throttlingRetryIntervalMs = options.throttling.retryIntervalMs
-//   }
-
-//   const proxy = new cls(proxyOptions)
-
-//   // start
-//   await proxy.start()
-
-//   // callback
-//   await fn(proxy)
-
-//   // stop
-//   await proxy.stop()
-
-//   return proxy
-// }

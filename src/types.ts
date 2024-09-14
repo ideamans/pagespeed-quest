@@ -1,6 +1,6 @@
 import Pino from 'pino'
 
-export type FormFactorType = 'desktop' | 'mobile'
+export type DeviceType = 'desktop' | 'mobile'
 
 export interface DependencyInterface {
   logger?: Pino.Logger
