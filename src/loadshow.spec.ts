@@ -25,7 +25,7 @@ test('loadshow - default', async (t) => {
         '-u',
         'recording.headers.User-Agent=Mozilla/5.0 (Linux; Android 11; moto g power (2022)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Mobile Safari/537.36',
         '-u',
-        'recording.puppeteer.args=--ignore-certificate-errors -u --proxy-server=http://localhost:8080',
+        'recording.puppeteer.args=--ignore-certificate-errors --proxy-server=http://localhost:8080',
         'https://example.com',
         './artifacts/loadshow.mp4',
       ])
@@ -63,7 +63,7 @@ test('loadshow - lighthouse', async (t) => {
         '-u',
         'recording.headers.User-Agent=Mozilla/5.0 (Linux; Android 11; moto g power (2022)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Mobile Safari/537.36',
         '-u',
-        'recording.puppeteer.args=--ignore-certificate-errors -u --proxy-server=http://localhost:8080',
+        'recording.puppeteer.args=--ignore-certificate-errors --proxy-server=http://localhost:8080',
         'https://example.com',
         './artifacts/loadshow.mp4',
       ])
@@ -75,7 +75,7 @@ test('loadshow - desktop', async (t) => {
   const spec: ExecLoadshowInput = {
     url: 'https://example.com',
     proxyPort: 8080,
-    formFactor: 'desktop',
+    deviceType: 'desktop',
   }
   execLoadshow(spec, {
     mkdirp: async (path: string) => {
@@ -95,7 +95,7 @@ test('loadshow - desktop', async (t) => {
         '-u',
         'recording.headers.User-Agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
         '-u',
-        'recording.puppeteer.args=--ignore-certificate-errors -u --proxy-server=http://localhost:8080',
+        'recording.puppeteer.args=--ignore-certificate-errors --proxy-server=http://localhost:8080',
         'https://example.com',
         './artifacts/loadshow.mp4',
       ])
@@ -107,7 +107,7 @@ test('loadshow - desktop - lighthouse', async (t) => {
   const spec: ExecLoadshowInput = {
     url: 'https://example.com',
     proxyPort: 8080,
-    formFactor: 'desktop',
+    deviceType: 'desktop',
     syncLighthouseSpec: true,
   }
   execLoadshow(spec, {
@@ -134,7 +134,7 @@ test('loadshow - desktop - lighthouse', async (t) => {
         '-u',
         'recording.headers.User-Agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
         '-u',
-        'recording.puppeteer.args=--ignore-certificate-errors -u --proxy-server=http://localhost:8080',
+        'recording.puppeteer.args=--ignore-certificate-errors --proxy-server=http://localhost:8080',
         'https://example.com',
         './artifacts/loadshow.mp4',
       ])
@@ -173,7 +173,7 @@ test('loadshow - lighthouse - noThrottling', async (t) => {
         '-u',
         'recording.headers.User-Agent=Mozilla/5.0 (Linux; Android 11; moto g power (2022)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Mobile Safari/537.36',
         '-u',
-        'recording.puppeteer.args=--ignore-certificate-errors -u --proxy-server=http://localhost:8080',
+        'recording.puppeteer.args=--ignore-certificate-errors --proxy-server=http://localhost:8080',
         'https://example.com',
         './artifacts/loadshow.mp4',
       ])

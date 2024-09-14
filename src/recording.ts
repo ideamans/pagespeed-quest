@@ -1,8 +1,7 @@
 import { IncomingHttpHeaders } from 'http'
 
 import { Inventory, Transaction } from './inventory.js'
-import { logger } from './logger.js'
-import { Proxy, withProxy, WithProxyOptions } from './proxy.js'
+import { Proxy, ProxyDependency, ProxyOptions } from './proxy.js'
 
 export interface RecordingTransaction {
   startedAt?: Date
@@ -44,20 +43,23 @@ export class RecordingProxy extends Proxy {
         contentChunks: [],
       }
 
-      logger().debug({ number, identifier }, `Request #${number} ${transaction.url} started`)
+      this.dependency.logger?.debug({ number, identifier }, `Request #${number} ${transaction.url} started`)
 
       ctx.onError((_, err, errKind) => {
         transaction.responseStartedAt = new Date()
         transaction.err = err
         transaction.errKind = errKind
-        logger().warn({ number, identifier, err }, `Request #${number} ${transaction.url} failed: ${err.message}`)
+        this.dependency.logger?.warn(
+          { number, identifier, err },
+          `Request #${number} ${transaction.url} failed: ${err.message}`
+        )
       })
 
       ctx.onResponse((_, onResponseComplete) => {
         transaction.responseStartedAt = new Date()
         transaction.statusCode = ctx.serverToProxyResponse.statusCode
         transaction.incomingHttpHeaders = ctx.serverToProxyResponse.headers
-        logger().debug({ number, identifier }, `Request #${number} ${transaction.url} responded`)
+        this.dependency.logger?.debug({ number, identifier }, `Request #${number} ${transaction.url} responded`)
         onResponseComplete()
       })
 
@@ -69,7 +71,7 @@ export class RecordingProxy extends Proxy {
       ctx.onResponseEnd((_, onResponseEndComplete) => {
         transaction.responseEndedAt = new Date()
         this.transactions.push(transaction)
-        logger().debug({ number, identifier }, `Request #${number} ${transaction.url} completed`)
+        this.dependency.logger?.debug({ number, identifier }, `Request #${number} ${transaction.url} completed`)
         onResponseEndComplete()
       })
 
@@ -119,7 +121,7 @@ export class RecordingProxy extends Proxy {
     }
 
     const resources = await this.inventoryRepository.saveTransactions(transactions)
-    const inventory: Inventory = { entryUrl: this.entryUrl, resources }
+    const inventory: Inventory = { entryUrl: this.entryUrl, deviceType: this.deviceType, resources }
     await this.inventoryRepository.saveInventory(inventory)
   }
 
@@ -128,6 +130,13 @@ export class RecordingProxy extends Proxy {
   }
 }
 
-export async function withRecordingProxy(fn: (proxy: RecordingProxy) => Promise<void>, options?: WithProxyOptions) {
-  return await withProxy<RecordingProxy>(RecordingProxy, fn, options || {})
+export async function withRecordingProxy(
+  options: ProxyOptions,
+  dependency: ProxyDependency,
+  cb: (proxy: RecordingProxy) => Promise<void>
+): Promise<void> {
+  const proxy = new RecordingProxy(options, dependency)
+  await proxy.start()
+  await cb(proxy)
+  await proxy.stop()
 }

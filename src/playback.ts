@@ -1,7 +1,6 @@
 import { HttpHeaders } from './http.js'
 import { Inventory } from './inventory.js'
-import { logger } from './logger.js'
-import { Proxy, withProxy, WithProxyOptions } from './proxy.js'
+import { Proxy, ProxyDependency, ProxyOptions } from './proxy.js'
 
 const ChunkSize = 1024 * 16
 
@@ -67,7 +66,7 @@ export class PlaybackProxy extends Proxy {
       const identifier = Proxy.contextRequest(ctx)
       const transaction = this.transactionsMap.get(identifier.method)?.get(identifier.url)
       if (!transaction) {
-        logger().warn(
+        this.dependency.logger?.warn(
           { number, identifier },
           `Request #${number} ${identifier.url} (${identifier.method}) not found in inventory`
         )
@@ -80,10 +79,13 @@ export class PlaybackProxy extends Proxy {
         contentStream.pipe(ctx.proxyToClientResponse)
       }
 
-      logger().debug({ number, identifier }, `Request #${number} ${transaction.url} started`)
+      this.dependency.logger?.debug({ number, identifier }, `Request #${number} ${transaction.url} started`)
 
       ctx.onError((_, err) => {
-        logger().warn({ number, identifier, err }, `Request #${number} ${transaction.url} failed: ${err.message}`)
+        this.dependency.logger?.warn(
+          { number, identifier, err },
+          `Request #${number} ${transaction.url} failed: ${err.message}`
+        )
       })
 
       setTimeout(() => {
@@ -120,7 +122,7 @@ export class PlaybackProxy extends Proxy {
           if (chunks.length === 0) {
             clearInterval(interval)
             contentStream.end()
-            logger().debug({ number, identifier }, `Request #${number} ${transaction.url} completed`)
+            this.dependency.logger?.debug({ number, identifier }, `Request #${number} ${transaction.url} completed`)
           }
         }, intervalMs)
       }, transaction.ttfbMs)
@@ -132,6 +134,13 @@ export class PlaybackProxy extends Proxy {
   }
 }
 
-export async function withPlaybackProxy(fn: (proxy: PlaybackProxy) => Promise<void>, options?: WithProxyOptions) {
-  return await withProxy<PlaybackProxy>(PlaybackProxy, fn, options || {})
+export async function withPlaybackProxy(
+  options: ProxyOptions,
+  dependency: ProxyDependency,
+  cb: (proxy: PlaybackProxy) => Promise<void>
+): Promise<void> {
+  const proxy = new PlaybackProxy(options, dependency)
+  await proxy.start()
+  await cb(proxy)
+  await proxy.stop()
 }

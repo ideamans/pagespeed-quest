@@ -1,9 +1,9 @@
-import { DependencyInterface, FormFactorType } from './types.js'
+import { DependencyInterface, DeviceType } from './types.js'
 
 export interface ExecLighthouseInput {
   url: string
   proxyPort: number
-  formFactor?: FormFactorType
+  deviceType?: DeviceType
   cpuMultiplier?: string
   noThrottling?: boolean
   view?: boolean
@@ -15,14 +15,14 @@ export async function execLighthouse(
 ): Promise<void> {
   await dependency.mkdirp('./artifacts')
 
-  const formFactor = opts.formFactor || 'mobile'
+  const deviceType = opts.deviceType || 'mobile'
   const args: string[] = [
     opts.url,
     '--save-assets',
     '--output=html,json',
     '--output-path=./artifacts/lighthouse',
     '--only-categories=performance',
-    `--form-factor=${formFactor}`,
+    `--form-factor=${deviceType}`,
   ]
 
   if (opts.noThrottling) {

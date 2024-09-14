@@ -29,6 +29,10 @@ test('RecordingProxy', async (t) => {
       // Recording proxy
       const inventoryRepository = new InventoryRepository(inventoryDir)
       await withRecordingProxy(
+        {
+          inventoryRepository,
+        },
+        {},
         async (proxy) => {
           const response = await Axios.get(`http://localhost:${serverPort}`, {
             proxy: {
@@ -39,8 +43,7 @@ test('RecordingProxy', async (t) => {
 
           t.is(response.status, 200)
           t.is(response.data, 'ok')
-        },
-        { dirPath: inventoryDir }
+        }
       )
 
       const inventory = await inventoryRepository.loadInventory()
