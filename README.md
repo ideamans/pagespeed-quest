@@ -62,6 +62,26 @@ yarn psq lighthouse playback
 
 A report page is automatically displayed. Report files and the like are created in the `artifacts` directory.
 
+### Creating a video of the loading process with loadsho
+
+By using the following `loadshow` subcommand, you can output the playback process of a loaded web page as a video using loadshow.
+
+```sh
+yarn psq loadshow playback
+```
+
+The video will be output as artifacts/loadshow.mp4.
+
+You can also use loadshow to record the loading of a web page.
+
+```sh
+yarn psq loadshow recording <https://example.com/>
+```
+
+Lighthouse and loadshow behave slightly differently when it comes to how the browser handles web page loading.
+
+If the main goal is to check speed improvements through video, it is recommended to use the `loadshow recording` subcommand.
+
 ## Launching the playback proxy
 
 You can launch only the proxy that plays back the web page with the following command.

@@ -83,6 +83,7 @@ export async function execLoadshow(
   const args: string[] = []
   args.push('record')
   args.push(...execSpecToCommandArgs(spec))
+  args.push('-a', './artifacts/loadshow')
   args.push(input.url, './artifacts/loadshow.mp4')
 
   await dependency.executeLoadshow(args)
