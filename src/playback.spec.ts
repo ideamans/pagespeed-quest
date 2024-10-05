@@ -34,6 +34,10 @@ test('PlaybackProxy', async (t) => {
 
       // Playback proxy
       await withPlaybackProxy(
+        {
+          inventoryRepository,
+        },
+        {},
         async (proxy) => {
           const response = await Axios.get(`http://localhost/`, {
             proxy: {
@@ -44,8 +48,7 @@ test('PlaybackProxy', async (t) => {
 
           t.is(response.status, 200)
           t.is(response.data, 'ok')
-        },
-        { dirPath: inventoryDir }
+        }
       )
     },
     { unsafeCleanup: true }

@@ -24,7 +24,7 @@ Web APIのモックツールである[VCR](https://github.com/vcr/vcr)をご存�
 
 ## 使い方
 
-Node JS 18以上が必要です。
+Node JS 20以上が必要です。
 
 ### プロジェクトの作成
 
@@ -62,6 +62,26 @@ yarn psq lighthouse playback
 
 レポートページが自動で表示されます。レポートファイル等は`artifacts`ディレクトリに作成されます。
 
+### loadshowによる読み込み過程の動画の作成
+
+次の`loadshow`サブコマンドを使うと、[loadshow](https://github.com/ideamans/loadshow)を用い、再生したWebページの読み込み過程を動画として出力できます。
+
+```sh
+yarn psq loadshow playback
+```
+
+動画は`artifacts/loadshow.mp4`として出力されます。
+
+また、Webページの記録においてもloadshowを利用できます。
+
+```sh
+yarn psq loadshow recording https://exmaple.com/
+```
+
+Lighthouseとloadshowでは、Webページの読み込みに関するブラウザの挙動が少し違います。
+
+動画によるスピード改善の確認が主な目的である場合は、`loadshow recording`サブコマンドを利用することを推奨します。
+
 ## 再生プロキシの起動
 
 次のコマンドでWebページを再生するプロキシのみを起動できます。
@@ -87,4 +107,4 @@ PageSpeed Questは、Webアプリケーションのリリースを必要とし�
 
 ## 連絡先
 
-技術サポートやビジネス利用に関しては contact@ideamans.com まで連絡ください。
+技術サポートやビジネス利用に関しては <contact@ideamans.com> まで連絡ください。
