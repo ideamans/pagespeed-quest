@@ -62,7 +62,7 @@ yarn psq lighthouse playback
 
 A report page is automatically displayed. Report files and the like are created in the `artifacts` directory.
 
-### Creating a video of the loading process with loadsho
+### Creating a video of the loading process with loadshow
 
 By using the following `loadshow` subcommand, you can output the playback process of a loaded web page as a video using loadshow.
 

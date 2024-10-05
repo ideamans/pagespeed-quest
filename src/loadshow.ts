@@ -23,6 +23,9 @@ export interface ExecLoadshowSpec {
 function execSpecToCommandArgs(spec: ExecLoadshowSpec): string[] {
   const args: string[] = []
 
+  // artifacts
+  args.push('-a', './artifacts/loadshow')
+
   // layout
   if (spec.columns !== undefined) args.push('-u', `layout.columns=${spec.columns}`)
 
@@ -83,7 +86,6 @@ export async function execLoadshow(
   const args: string[] = []
   args.push('record')
   args.push(...execSpecToCommandArgs(spec))
-  args.push('-a', './artifacts/loadshow')
   args.push(input.url, './artifacts/loadshow.mp4')
 
   await dependency.executeLoadshow(args)
