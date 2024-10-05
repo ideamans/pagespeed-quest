@@ -24,7 +24,7 @@ Web APIのモックツールである[VCR](https://github.com/vcr/vcr)をご存�
 
 ## 使い方
 
-Node JS 18以上が必要です。
+Node JS 20以上が必要です。
 
 ### プロジェクトの作成
 

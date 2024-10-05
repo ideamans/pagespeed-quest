@@ -24,7 +24,7 @@ Thanks to this mechanism, instead of actually modifying the application, you can
 
 ## How to use
 
-Node JS 18 or higher is required.
+Node JS 20 or higher is required.
 
 ### Creating a project
 
