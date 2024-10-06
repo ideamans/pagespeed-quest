@@ -1,3 +1,5 @@
+import Path from 'path'
+
 import { DependencyInterface, DeviceType } from './types.js'
 
 export interface ExecLighthouseInput {
@@ -7,20 +9,23 @@ export interface ExecLighthouseInput {
   cpuMultiplier?: string
   noThrottling?: boolean
   view?: boolean
+  artifactsDir?: string
 }
 
 export async function execLighthouse(
   opts: ExecLighthouseInput,
   dependency: Pick<DependencyInterface, 'mkdirp' | 'executeLighthouse'>
 ): Promise<void> {
-  await dependency.mkdirp('./artifacts')
+  const artifactsDir = opts.artifactsDir || './artifacts'
+  await dependency.mkdirp(artifactsDir)
 
   const deviceType = opts.deviceType || 'mobile'
+  const outputPath = Path.join(artifactsDir, 'lighthouse')
   const args: string[] = [
     opts.url,
     '--save-assets',
     '--output=html,json',
-    '--output-path=./artifacts/lighthouse',
+    `--output-path=${outputPath}`,
     '--only-categories=performance',
     `--form-factor=${deviceType}`,
   ]

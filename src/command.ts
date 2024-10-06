@@ -17,6 +17,7 @@ const defaultInventoryRepository = new InventoryRepository('./inventory', depend
 function registerLighthouseCommands(main: Command) {
   const lighthouse = main.command('lighthouse')
   lighthouse.description('Run Lighthouse (performance category) via a proxy')
+  lighthouse.option('-a, --artifacts <dir>', 'Artifacts directory', './artifacts')
 
   const recording = lighthouse.command('recording')
   recording.description('Record contents by lighthouse')
@@ -24,6 +25,7 @@ function registerLighthouseCommands(main: Command) {
   recording.argument('<url>', 'Url to measure performance')
   recording.action(async (url: string) => {
     const deviceType: DeviceType = recording.opts().device || 'mobile'
+    const artifactsDir = lighthouse.opts().artifacts || './artifacts'
     await withRecordingProxy(
       {
         entryUrl: url,
@@ -32,7 +34,10 @@ function registerLighthouseCommands(main: Command) {
       },
       dependency,
       async (proxy) => {
-        await execLighthouse({ url, proxyPort: proxy.port, deviceType, noThrottling: true, view: false }, dependency)
+        await execLighthouse(
+          { url, proxyPort: proxy.port, deviceType, noThrottling: true, view: false, artifactsDir },
+          dependency
+        )
         dependency.logger?.info('Lighthouse completed. Saving inventory...')
       }
     )
@@ -41,6 +46,7 @@ function registerLighthouseCommands(main: Command) {
   const playback = lighthouse.command('playback')
   playback.description('Playback contents for lighthouse')
   playback.action(async () => {
+    const artifactsDir = lighthouse.opts().artifacts || './artifacts'
     await withPlaybackProxy(
       {
         inventoryRepository: defaultInventoryRepository,
@@ -48,7 +54,7 @@ function registerLighthouseCommands(main: Command) {
       dependency,
       async (proxy) => {
         await execLighthouse(
-          { url: proxy.entryUrl, proxyPort: proxy.port, deviceType: proxy.deviceType, view: true },
+          { url: proxy.entryUrl, proxyPort: proxy.port, deviceType: proxy.deviceType, view: true, artifactsDir },
           dependency
         )
         dependency.logger?.info('Lighthouse completed')
@@ -60,6 +66,7 @@ function registerLighthouseCommands(main: Command) {
 function registerLoadshowCommands(main: Command) {
   const loadshow = main.command('loadshow')
   loadshow.description('Run loadshow via a proxy')
+  loadshow.option('-a, --artifacts <dir>', 'Artifacts directory', './artifacts')
 
   const recording = loadshow.command('recording')
   recording.description('Record contents by loadshow')
@@ -67,11 +74,12 @@ function registerLoadshowCommands(main: Command) {
   recording.argument('<url>', 'Url to measure performance')
   recording.action(async (url: string) => {
     const deviceType: DeviceType = recording.opts().device || 'mobile'
+    const artifactsDir = loadshow.opts().artifacts || './artifacts'
     await withRecordingProxy(
       { entryUrl: url, deviceType, inventoryRepository: defaultInventoryRepository },
       dependency,
       async (proxy) => {
-        await execLoadshow({ url, proxyPort: proxy.port, deviceType }, dependency)
+        await execLoadshow({ url, proxyPort: proxy.port, deviceType, artifactsDir }, dependency)
         dependency.logger?.info('Loadshow completed. Saving inventory...')
       }
     )
@@ -82,6 +90,7 @@ function registerLoadshowCommands(main: Command) {
   playback.option('-l, --lighthouse', 'Loadshow with lighthouse throttling')
   playback.action(async () => {
     const lighthouse: boolean = playback.opts().lighthouse
+    const artifactsDir = loadshow.opts().artifacts || './artifacts'
     await withPlaybackProxy(
       {
         inventoryRepository: defaultInventoryRepository,
@@ -89,7 +98,13 @@ function registerLoadshowCommands(main: Command) {
       dependency,
       async (proxy) => {
         await execLoadshow(
-          { url: proxy.entryUrl, proxyPort: proxy.port, deviceType: proxy.deviceType, syncLighthouseSpec: lighthouse },
+          {
+            url: proxy.entryUrl,
+            proxyPort: proxy.port,
+            deviceType: proxy.deviceType,
+            syncLighthouseSpec: lighthouse,
+            artifactsDir,
+          },
           dependency
         )
         dependency.logger?.info('Loadshow completed')
