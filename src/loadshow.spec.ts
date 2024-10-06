@@ -9,13 +9,13 @@ test('loadshow - default', async (t) => {
   }
   execLoadshow(spec, {
     mkdirp: async (path: string) => {
-      t.is(path, './artifacts/loadshow')
+      t.is(path, 'artifacts/loadshow')
     },
     executeLoadshow: async (args: string[]) => {
       t.deepEqual(args, [
         'record',
         '-a',
-        './artifacts/loadshow',
+        'artifacts/loadshow',
         '-u',
         'layout.columns=3',
         '-u',
@@ -27,7 +27,7 @@ test('loadshow - default', async (t) => {
         '-u',
         'recording.puppeteer.args=--ignore-certificate-errors,--proxy-server=http://localhost:8080',
         'https://example.com',
-        './artifacts/loadshow.mp4',
+        'artifacts/loadshow.mp4',
       ])
     },
   })
@@ -41,13 +41,13 @@ test('loadshow - lighthouse', async (t) => {
   }
   execLoadshow(spec, {
     mkdirp: async (path: string) => {
-      t.is(path, './artifacts/loadshow')
+      t.is(path, 'artifacts/loadshow')
     },
     executeLoadshow: async (args: string[]) => {
       t.deepEqual(args, [
         'record',
         '-a',
-        './artifacts/loadshow',
+        'artifacts/loadshow',
         '-u',
         'layout.columns=3',
         '-u',
@@ -65,7 +65,7 @@ test('loadshow - lighthouse', async (t) => {
         '-u',
         'recording.puppeteer.args=--ignore-certificate-errors,--proxy-server=http://localhost:8080',
         'https://example.com',
-        './artifacts/loadshow.mp4',
+        'artifacts/loadshow.mp4',
       ])
     },
   })
@@ -79,13 +79,13 @@ test('loadshow - desktop', async (t) => {
   }
   execLoadshow(spec, {
     mkdirp: async (path: string) => {
-      t.is(path, './artifacts/loadshow')
+      t.is(path, 'artifacts/loadshow')
     },
     executeLoadshow: async (args: string[]) => {
       t.deepEqual(args, [
         'record',
         '-a',
-        './artifacts/loadshow',
+        'artifacts/loadshow',
         '-u',
         'layout.columns=2',
         '-u',
@@ -97,7 +97,7 @@ test('loadshow - desktop', async (t) => {
         '-u',
         'recording.puppeteer.args=--ignore-certificate-errors,--proxy-server=http://localhost:8080',
         'https://example.com',
-        './artifacts/loadshow.mp4',
+        'artifacts/loadshow.mp4',
       ])
     },
   })
@@ -112,13 +112,13 @@ test('loadshow - desktop - lighthouse', async (t) => {
   }
   execLoadshow(spec, {
     mkdirp: async (path: string) => {
-      t.is(path, './artifacts/loadshow')
+      t.is(path, 'artifacts/loadshow')
     },
     executeLoadshow: async (args: string[]) => {
       t.deepEqual(args, [
         'record',
         '-a',
-        './artifacts/loadshow',
+        'artifacts/loadshow',
         '-u',
         'layout.columns=2',
         '-u',
@@ -136,7 +136,7 @@ test('loadshow - desktop - lighthouse', async (t) => {
         '-u',
         'recording.puppeteer.args=--ignore-certificate-errors,--proxy-server=http://localhost:8080',
         'https://example.com',
-        './artifacts/loadshow.mp4',
+        'artifacts/loadshow.mp4',
       ])
     },
   })
@@ -151,13 +151,13 @@ test('loadshow - lighthouse - noThrottling', async (t) => {
   }
   execLoadshow(spec, {
     mkdirp: async (path: string) => {
-      t.is(path, './artifacts/loadshow')
+      t.is(path, 'artifacts/loadshow')
     },
     executeLoadshow: async (args: string[]) => {
       t.deepEqual(args, [
         'record',
         '-a',
-        './artifacts/loadshow',
+        'artifacts/loadshow',
         '-u',
         'layout.columns=3',
         '-u',
@@ -175,7 +175,7 @@ test('loadshow - lighthouse - noThrottling', async (t) => {
         '-u',
         'recording.puppeteer.args=--ignore-certificate-errors,--proxy-server=http://localhost:8080',
         'https://example.com',
-        './artifacts/loadshow.mp4',
+        'artifacts/loadshow.mp4',
       ])
     },
   })

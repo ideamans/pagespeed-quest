@@ -1,3 +1,5 @@
+import Path from 'path'
+
 import { defaultConfig, desktopConfig } from 'lighthouse'
 
 import { DependencyInterface, DeviceType } from './types.js'
@@ -8,6 +10,7 @@ export interface ExecLoadshowInput {
   deviceType?: DeviceType
   noThrottling?: boolean
   syncLighthouseSpec?: boolean
+  artifactsDir?: string
 }
 
 export interface ExecLoadshowSpec {
@@ -22,9 +25,6 @@ export interface ExecLoadshowSpec {
 
 function execSpecToCommandArgs(spec: ExecLoadshowSpec): string[] {
   const args: string[] = []
-
-  // artifacts
-  args.push('-a', './artifacts/loadshow')
 
   // layout
   if (spec.columns !== undefined) args.push('-u', `layout.columns=${spec.columns}`)
@@ -53,7 +53,10 @@ export async function execLoadshow(
   input: ExecLoadshowInput,
   dependency: Pick<DependencyInterface, 'mkdirp' | 'executeLoadshow'>
 ): Promise<void> {
-  await dependency.mkdirp('./artifacts/loadshow')
+  const artifactsDir = input.artifactsDir || './artifacts'
+  const loadshowDir = Path.join(artifactsDir, 'loadshow')
+  const outputPath = Path.join(artifactsDir, 'loadshow.mp4')
+  await dependency.mkdirp(loadshowDir)
 
   // By form factor
   const lighthouseByDevice = input.deviceType === 'desktop' ? desktopConfig : defaultConfig
@@ -85,8 +88,9 @@ export async function execLoadshow(
 
   const args: string[] = []
   args.push('record')
+  args.push('-a', loadshowDir)
   args.push(...execSpecToCommandArgs(spec))
-  args.push(input.url, './artifacts/loadshow.mp4')
+  args.push(input.url, outputPath)
 
   await dependency.executeLoadshow(args)
 }
