@@ -10,6 +10,7 @@ export interface ExecLighthouseInput {
   noThrottling?: boolean
   view?: boolean
   artifactsDir?: string
+  headless: boolean
 }
 
 export async function execLighthouse(
@@ -41,6 +42,7 @@ export async function execLighthouse(
   } else if (opts.cpuMultiplier) args.push(`--throttling.cpuSlowdownMultiplier=${opts.cpuMultiplier}`)
 
   const chromeFlags: string[] = ['--ignore-certificate-errors', `--proxy-server=http://localhost:${opts.proxyPort}`]
+  if (opts.headless) chromeFlags.push('--headless')
   args.push(`--chrome-flags="${chromeFlags.join(' ')}"`)
 
   if (opts.view) args.push('--view')
