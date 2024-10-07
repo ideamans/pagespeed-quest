@@ -6,6 +6,7 @@ test('lighthouse - default', async (t) => {
   const input: ExecLighthouseInput = {
     url: 'https://example.com',
     proxyPort: 8080,
+    headless: false,
   }
   await execLighthouse(input, {
     mkdirp: async (path: string) => {
@@ -30,6 +31,7 @@ test('lighthouse - desktop', async (t) => {
     url: 'https://example.com',
     proxyPort: 8080,
     deviceType: 'desktop',
+    headless: false,
   }
   await execLighthouse(input, {
     mkdirp: async (path: string) => {
@@ -49,11 +51,12 @@ test('lighthouse - desktop', async (t) => {
   })
 })
 
-test('lighthouse - noThrottling', async (t) => {
+test('lighthouse - noThrottling, headless', async (t) => {
   const input: ExecLighthouseInput = {
     url: 'https://example.com',
     proxyPort: 8080,
     noThrottling: true,
+    headless: true,
   }
   await execLighthouse(input, {
     mkdirp: async (path: string) => {
@@ -72,7 +75,7 @@ test('lighthouse - noThrottling', async (t) => {
         '--throttling.downloadThroughputKbps=0',
         '--throttling.uploadThroughputKbps=0',
         '--throttling.cpuSlowdownMultiplier=1',
-        '--chrome-flags="--ignore-certificate-errors --proxy-server=http://localhost:8080"',
+        '--chrome-flags="--ignore-certificate-errors --proxy-server=http://localhost:8080 --headless"',
       ])
     },
   })
