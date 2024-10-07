@@ -1,6 +1,6 @@
 {
   "name": "pagespeed-quest",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "type": "module",
   "description": "A framework for efficient web front-end speed improvement",
   "main": "build/index.js",
@@ -45,7 +45,8 @@
     "reset-hard": "git clean -dfx && git reset --hard && yarn",
     "prepare-release": "run-s reset-hard test cov:check doc:html version doc:publish",
     "adhoc": "yarn build && node build/adhoc.js",
-    "command": "yarn build && node build/command.js"
+    "command": "yarn build && node build/command.js",
+    "prepublishOnly": "yarn build"
   },
   "engines": {
     "node": ">=18"
