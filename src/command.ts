@@ -20,6 +20,7 @@ function registerLighthouseCommands(main: Command) {
   lighthouse.description('Run Lighthouse (performance category) via a proxy')
   lighthouse.option('-a, --artifacts <dir>', 'Artifacts directory', './artifacts')
   lighthouse.option('-q, --quiet', 'Run headless', false)
+  lighthouse.option('-t, --timeout <ms>', 'Timeout milliseconds', '30000')
 
   const recording = lighthouse.command('recording')
   recording.description('Record contents by lighthouse')
@@ -30,6 +31,8 @@ function registerLighthouseCommands(main: Command) {
     const deviceType: DeviceType = recording.opts().device || 'mobile'
     const artifactsDir = lighthouse.opts().artifacts || './artifacts'
     const quiet = !!lighthouse.opts().quiet
+    const timeout = Number(lighthouse.opts().timeout || '30000')
+
     await withRecordingProxy(
       {
         entryUrl: url,
@@ -39,7 +42,16 @@ function registerLighthouseCommands(main: Command) {
       dependency,
       async (proxy) => {
         await execLighthouse(
-          { url, proxyPort: proxy.port, deviceType, noThrottling: true, view: false, artifactsDir, headless: quiet },
+          {
+            url,
+            proxyPort: proxy.port,
+            deviceType,
+            noThrottling: true,
+            view: false,
+            artifactsDir,
+            headless: quiet,
+            timeout,
+          },
           dependency
         )
         dependency.logger?.info('Lighthouse completed. Saving inventory...')
@@ -53,6 +65,8 @@ function registerLighthouseCommands(main: Command) {
     const inventoryRepository = new InventoryRepository(main.opts().inventory || './inventory')
     const artifactsDir = lighthouse.opts().artifacts || './artifacts'
     const quiet = !!lighthouse.opts().quiet
+    const timeout = Number(lighthouse.opts().timeout || '30000')
+
     await withPlaybackProxy(
       {
         inventoryRepository,
@@ -67,6 +81,7 @@ function registerLighthouseCommands(main: Command) {
             view: !quiet,
             artifactsDir,
             headless: quiet,
+            timeout,
           },
           dependency
         )
@@ -80,6 +95,7 @@ function registerLoadshowCommands(main: Command) {
   const loadshow = main.command('loadshow')
   loadshow.description('Run loadshow via a proxy')
   loadshow.option('-a, --artifacts <dir>', 'Artifacts directory', './artifacts')
+  loadshow.option('-t, --timeout <ms>', 'Timeout milliseconds', '30000')
 
   const recording = loadshow.command('recording')
   recording.description('Record contents by loadshow')
@@ -89,8 +105,10 @@ function registerLoadshowCommands(main: Command) {
     const inventoryRepository = new InventoryRepository(main.opts().inventory || './inventory')
     const deviceType: DeviceType = recording.opts().device || 'mobile'
     const artifactsDir = loadshow.opts().artifacts || './artifacts'
+    const timeout = Number(loadshow.opts().timeout || '30000')
+
     await withRecordingProxy({ entryUrl: url, deviceType, inventoryRepository }, dependency, async (proxy) => {
-      await execLoadshow({ url, proxyPort: proxy.port, deviceType, artifactsDir }, dependency)
+      await execLoadshow({ url, proxyPort: proxy.port, deviceType, artifactsDir, timeout }, dependency)
       dependency.logger?.info('Loadshow completed. Saving inventory...')
     })
   })
@@ -102,6 +120,8 @@ function registerLoadshowCommands(main: Command) {
     const inventoryRepository = new InventoryRepository(main.opts().inventory || './inventory')
     const lighthouse: boolean = playback.opts().lighthouse
     const artifactsDir = loadshow.opts().artifacts || './artifacts'
+    const timeout = Number(loadshow.opts().timeout || '30000')
+
     await withPlaybackProxy(
       {
         inventoryRepository,
@@ -115,6 +135,7 @@ function registerLoadshowCommands(main: Command) {
             deviceType: proxy.deviceType,
             syncLighthouseSpec: lighthouse,
             artifactsDir,
+            timeout,
           },
           dependency
         )

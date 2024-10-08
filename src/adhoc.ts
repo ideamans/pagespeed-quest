@@ -21,7 +21,7 @@ export async function recording() {
     dependency,
     async (proxy) => {
       proxy.entryUrl = sampleUrl
-      await execLighthouse({ url: sampleUrl, proxyPort: proxy.port, headless: false }, dependency)
+      await execLighthouse({ url: sampleUrl, proxyPort: proxy.port, headless: false, timeout: 60000 }, dependency)
     }
   )
 }
@@ -35,7 +35,7 @@ export async function playback() {
     dependency,
     async (proxy) => {
       if (!proxy.entryUrl) throw new Error('proxy.entryUrl is empty')
-      await execLighthouse({ url: proxy.entryUrl, proxyPort: proxy.port, headless: false }, dependency)
+      await execLighthouse({ url: proxy.entryUrl, proxyPort: proxy.port, headless: false, timeout: 60000 }, dependency)
     }
   )
 }

@@ -7,6 +7,7 @@ test('lighthouse - default', async (t) => {
     url: 'https://example.com',
     proxyPort: 8080,
     headless: false,
+    timeout: 60000,
   }
   await execLighthouse(input, {
     mkdirp: async (path: string) => {
@@ -20,6 +21,7 @@ test('lighthouse - default', async (t) => {
         '--output-path=artifacts/lighthouse',
         '--only-categories=performance',
         '--form-factor=mobile',
+        '--max-wait-for-load=60000',
         '--chrome-flags="--ignore-certificate-errors --proxy-server=http://localhost:8080"',
       ])
     },
@@ -32,6 +34,7 @@ test('lighthouse - desktop', async (t) => {
     proxyPort: 8080,
     deviceType: 'desktop',
     headless: false,
+    timeout: 30000,
   }
   await execLighthouse(input, {
     mkdirp: async (path: string) => {
@@ -45,6 +48,7 @@ test('lighthouse - desktop', async (t) => {
         '--output-path=artifacts/lighthouse',
         '--only-categories=performance',
         '--form-factor=desktop',
+        '--max-wait-for-load=30000',
         '--chrome-flags="--ignore-certificate-errors --proxy-server=http://localhost:8080"',
       ])
     },
@@ -57,6 +61,7 @@ test('lighthouse - noThrottling, headless', async (t) => {
     proxyPort: 8080,
     noThrottling: true,
     headless: true,
+    timeout: 30000,
   }
   await execLighthouse(input, {
     mkdirp: async (path: string) => {
@@ -75,6 +80,7 @@ test('lighthouse - noThrottling, headless', async (t) => {
         '--throttling.downloadThroughputKbps=0',
         '--throttling.uploadThroughputKbps=0',
         '--throttling.cpuSlowdownMultiplier=1',
+        '--max-wait-for-load=30000',
         '--chrome-flags="--ignore-certificate-errors --proxy-server=http://localhost:8080 --headless"',
       ])
     },
