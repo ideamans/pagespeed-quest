@@ -6,6 +6,7 @@ test('loadshow - default', async (t) => {
   const spec: ExecLoadshowInput = {
     url: 'https://example.com',
     proxyPort: 8080,
+    timeout: 60000,
   }
   execLoadshow(spec, {
     mkdirp: async (path: string) => {
@@ -23,6 +24,8 @@ test('loadshow - default', async (t) => {
         '-u',
         'recording.cpuThrottling=4',
         '-u',
+        'recording.timeoutMs=60000',
+        '-u',
         'recording.headers.User-Agent=Mozilla/5.0 (Linux; Android 11; moto g power (2022)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Mobile Safari/537.36',
         '-u',
         'recording.puppeteer.args=--ignore-certificate-errors,--proxy-server=http://localhost:8080',
@@ -38,6 +41,7 @@ test('loadshow - lighthouse', async (t) => {
     url: 'https://example.com',
     proxyPort: 8080,
     syncLighthouseSpec: true,
+    timeout: 30000,
   }
   execLoadshow(spec, {
     mkdirp: async (path: string) => {
@@ -61,6 +65,8 @@ test('loadshow - lighthouse', async (t) => {
         '-u',
         'recording.network.downloadThroughputMbps=1.6',
         '-u',
+        'recording.timeoutMs=30000',
+        '-u',
         'recording.headers.User-Agent=Mozilla/5.0 (Linux; Android 11; moto g power (2022)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Mobile Safari/537.36',
         '-u',
         'recording.puppeteer.args=--ignore-certificate-errors,--proxy-server=http://localhost:8080',
@@ -76,6 +82,7 @@ test('loadshow - desktop', async (t) => {
     url: 'https://example.com',
     proxyPort: 8080,
     deviceType: 'desktop',
+    timeout: 30000,
   }
   execLoadshow(spec, {
     mkdirp: async (path: string) => {
@@ -93,6 +100,8 @@ test('loadshow - desktop', async (t) => {
         '-u',
         'recording.cpuThrottling=1',
         '-u',
+        'recording.timeoutMs=30000',
+        '-u',
         'recording.headers.User-Agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
         '-u',
         'recording.puppeteer.args=--ignore-certificate-errors,--proxy-server=http://localhost:8080',
@@ -109,6 +118,7 @@ test('loadshow - desktop - lighthouse', async (t) => {
     proxyPort: 8080,
     deviceType: 'desktop',
     syncLighthouseSpec: true,
+    timeout: 30000,
   }
   execLoadshow(spec, {
     mkdirp: async (path: string) => {
@@ -132,6 +142,8 @@ test('loadshow - desktop - lighthouse', async (t) => {
         '-u',
         'recording.network.downloadThroughputMbps=10',
         '-u',
+        'recording.timeoutMs=30000',
+        '-u',
         'recording.headers.User-Agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
         '-u',
         'recording.puppeteer.args=--ignore-certificate-errors,--proxy-server=http://localhost:8080',
@@ -148,6 +160,7 @@ test('loadshow - lighthouse - noThrottling', async (t) => {
     proxyPort: 8080,
     syncLighthouseSpec: true,
     noThrottling: true,
+    timeout: 30000,
   }
   execLoadshow(spec, {
     mkdirp: async (path: string) => {
@@ -170,6 +183,8 @@ test('loadshow - lighthouse - noThrottling', async (t) => {
         'recording.network.uploadThroughputMbps=999999',
         '-u',
         'recording.network.downloadThroughputMbps=999999',
+        '-u',
+        'recording.timeoutMs=30000',
         '-u',
         'recording.headers.User-Agent=Mozilla/5.0 (Linux; Android 11; moto g power (2022)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Mobile Safari/537.36',
         '-u',

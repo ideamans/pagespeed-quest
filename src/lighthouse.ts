@@ -11,6 +11,7 @@ export interface ExecLighthouseInput {
   view?: boolean
   artifactsDir?: string
   headless: boolean
+  timeout: number
 }
 
 export async function execLighthouse(
@@ -40,6 +41,8 @@ export async function execLighthouse(
       '--throttling.cpuSlowdownMultiplier=1'
     )
   } else if (opts.cpuMultiplier) args.push(`--throttling.cpuSlowdownMultiplier=${opts.cpuMultiplier}`)
+
+  args.push(`--max-wait-for-load=${opts.timeout}`)
 
   const chromeFlags: string[] = ['--ignore-certificate-errors', `--proxy-server=http://localhost:${opts.proxyPort}`]
   if (opts.headless) chromeFlags.push('--headless')

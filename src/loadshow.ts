@@ -11,6 +11,7 @@ export interface ExecLoadshowInput {
   noThrottling?: boolean
   syncLighthouseSpec?: boolean
   artifactsDir?: string
+  timeout: number
 }
 
 export interface ExecLoadshowSpec {
@@ -19,6 +20,7 @@ export interface ExecLoadshowSpec {
   cpuThrottling?: number
   networkLatencyMs?: number
   networkThroughputMbps?: number
+  timeoutMs?: number
   userAgent?: string
   proxyPort?: number
 }
@@ -37,6 +39,7 @@ function execSpecToCommandArgs(spec: ExecLoadshowSpec): string[] {
     args.push('-u', `recording.network.uploadThroughputMbps=${spec.networkThroughputMbps}`)
     args.push('-u', `recording.network.downloadThroughputMbps=${spec.networkThroughputMbps}`)
   }
+  if (spec.timeoutMs !== undefined) args.push('-u', `recording.timeoutMs=${spec.timeoutMs}`)
   if (spec.userAgent !== undefined) args.push('-u', `recording.headers.User-Agent=${spec.userAgent}`)
 
   // recording.puppeteer
@@ -70,6 +73,7 @@ export async function execLoadshow(
     viewportWidth: lighthouseByDevice.settings?.screenEmulation?.width,
     cpuThrottling: lighthouseByDevice.settings?.throttling?.cpuSlowdownMultiplier,
     userAgent: typeof userAgent === 'string' ? userAgent : undefined,
+    timeoutMs: input.timeout,
   }
 
   // Sync network conditions with Lighthouse
