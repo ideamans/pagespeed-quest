@@ -32,6 +32,15 @@ export class RecordingProxy extends Proxy {
     this.proxy.onRequest((ctx, onRequestComplete) => {
       const number = requestNumber++
 
+      // Skip websocket
+      if (ctx.clientToProxyRequest.headers?.upgrade === 'websocket') {
+        this.dependency.logger?.warn(
+          { number },
+          `Request #${number} ${ctx.clientToProxyRequest.url} skipped (websocket)`
+        )
+        return
+      }
+
       // Throttling
       const filter = this.createThrottlingTransform()
       if (filter) ctx.addResponseFilter(filter)

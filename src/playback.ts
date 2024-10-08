@@ -63,6 +63,15 @@ export class PlaybackProxy extends Proxy {
     this.proxy.onRequest((ctx, onRequestComplete) => {
       const number = requestNumber++
 
+      // Skip websocket
+      if (ctx.clientToProxyRequest.headers?.upgrade === 'websocket') {
+        this.dependency.logger?.warn(
+          { number },
+          `Request #${number} ${ctx.clientToProxyRequest.url} skipped (websocket)`
+        )
+        return
+      }
+
       const identifier = Proxy.contextRequest(ctx)
       const transaction = this.transactionsMap.get(identifier.method)?.get(identifier.url)
       if (!transaction) {
