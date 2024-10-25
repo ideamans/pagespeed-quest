@@ -184,9 +184,9 @@ export class InventoryRepository {
       // content
       let content: Buffer | undefined
 
-      if (resource.contentUtf8) {
+      if (resource.contentUtf8 !== undefined) {
         content = Buffer.from(resource.contentUtf8)
-      } else if (resource.contentBase64) {
+      } else if (resource.contentBase64 !== undefined) {
         content = Buffer.from(resource.contentBase64, 'base64')
       } else if (resource.contentFilePath) {
         const fullPath = Path.join(this.dirPath, resource.contentFilePath)
