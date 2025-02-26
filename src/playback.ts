@@ -1,5 +1,5 @@
 import { HttpHeaders } from './http.js'
-import { Inventory } from './inventory.js'
+import { Inventory, Transaction } from './inventory.js'
 import { Proxy, ProxyDependency, ProxyOptions } from './proxy.js'
 
 const ChunkSize = 1024 * 16
@@ -17,12 +17,13 @@ export interface PlaybackTransaction {
 }
 
 export class PlaybackProxy extends Proxy {
+  transactions: Transaction[] = []
   transactionsMap: Map<string, Map<string, PlaybackTransaction>> = new Map()
 
   async loadTransactions(inventory: Inventory): Promise<void> {
-    const transactions = await this.inventoryRepository.loadTransactions(inventory.resources)
+    this.transactions = await this.inventoryRepository.loadTransactions(inventory.resources)
 
-    for (const transaction of transactions) {
+    for (const transaction of this.transactions) {
       const playbackTransaction: PlaybackTransaction = {
         method: transaction.method,
         url: transaction.url,
