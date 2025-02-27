@@ -12,6 +12,7 @@ export interface ExecLoadshowInput {
   syncLighthouseSpec?: boolean
   artifactsDir?: string
   timeout: number
+  credit?: string
 }
 
 export interface ExecLoadshowSpec {
@@ -23,6 +24,7 @@ export interface ExecLoadshowSpec {
   timeoutMs?: number
   userAgent?: string
   proxyPort?: number
+  credit?: string
 }
 
 function execSpecToCommandArgs(spec: ExecLoadshowSpec): string[] {
@@ -48,6 +50,9 @@ function execSpecToCommandArgs(spec: ExecLoadshowSpec): string[] {
     chromeArgs.push(`--proxy-server=http://localhost:${spec.proxyPort}`)
   }
   args.push('-u', 'recording.puppeteer.args=' + chromeArgs.join(','))
+
+  // credit
+  if (spec.credit) args.push('-u', `banner.vars.credit=${spec.credit}`)
 
   return args
 }
@@ -89,6 +94,9 @@ export async function execLoadshow(
     spec.networkLatencyMs = 0
     spec.networkThroughputMbps = 999999
   }
+
+  // Credit
+  spec.credit = input.credit
 
   const args: string[] = []
   args.push('record')
