@@ -74,10 +74,12 @@ The codebase follows a modular architecture with clear separation of concerns:
    - Allows easy mocking and testing
 
 ### CLI Command Structure
-The `psq` command has three main subcommands:
+The `psq` command has five main subcommands:
 - `lighthouse [recording|playback]` - Performance testing with Lighthouse
 - `loadshow [recording|playback]` - Video generation with loadshow  
-- `proxy` - Standalone proxy server
+- `proxy` - Standalone proxy server with file watching
+- `recording` - Start HTTP proxy in recording mode
+- `playback` - Start HTTP proxy in playback mode
 
 ### Testing Strategy
 - Unit tests use AVA framework with NYC for coverage
