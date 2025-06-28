@@ -152,6 +152,7 @@ function registerLoadshowCommands(main: Command) {
 function registerProxyCommands(main: Command) {
   const proxy = main.command('proxy')
   proxy.option('-p, --port <number>', 'Proxy port', '8080')
+  proxy.option('-r, --record <url>', 'Recording URL to start the proxy as recording mode', '')
 
   proxy.action(async () => {
     const inventoryRepository = new InventoryRepository(main.opts().inventory || './inventory')
@@ -160,18 +161,39 @@ function registerProxyCommands(main: Command) {
       port: Number(proxy.opts().port || '8080'),
     }
 
-    // eslint-disable-next-line no-constant-condition
-    while (true) {
-      await withPlaybackProxy(proxyOptions, dependency, async () => {
-        const watcher = Watch(inventoryRepository.dirPath, { recursive: true })
-        return new Promise((ok) => {
-          watcher.on('change', () => {
-            watcher.close()
-            dependency.logger?.info('Inventory changed. Restarting proxy...')
-            ok()
+    if (proxy.opts().record) {
+      const url = proxy.opts().record
+      if (!url) {
+        throw new Error('Recording URL must be specified with --record option.')
+      }
+
+      // Recordingモード
+      await withRecordingProxy({ ...proxyOptions, entryUrl: url }, dependency, async () => {
+        dependency.logger?.info(`Recording proxy started on port ${proxyOptions.port}. Press Ctrl+C to stop.`)
+
+        // Wait for Ctrl+C signal
+        return new Promise<void>((resolve) => {
+          process.on('SIGINT', () => {
+            dependency.logger?.info('Saving the inventory...')
+            resolve()
           })
         })
       })
+    } else {
+      // Playbackモード
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        await withPlaybackProxy(proxyOptions, dependency, async () => {
+          const watcher = Watch(inventoryRepository.dirPath, { recursive: true })
+          return new Promise((ok) => {
+            watcher.on('change', () => {
+              watcher.close()
+              dependency.logger?.info('Inventory changed. Restarting proxy...')
+              ok()
+            })
+          })
+        })
+      }
     }
   })
 }
