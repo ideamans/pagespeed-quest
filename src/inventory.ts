@@ -9,6 +9,7 @@ import { DependencyInterface, DeviceType } from './types.js'
 
 const InventoryDir = 'inventory'
 const IndexFile = 'index.json'
+const InventoryFile = 'inventory.json' // Rust proxy uses this name
 
 export interface Resource {
   method: string
@@ -58,13 +59,25 @@ export class InventoryRepository {
   async saveInventory(inventory: Inventory) {
     const inventoryJson = JSON.stringify(inventory, null, 2)
     await Fsp.mkdir(this.dirPath, { recursive: true })
+    // Save as both index.json (legacy) and inventory.json (Rust proxy)
     await Fsp.writeFile(Path.join(this.dirPath, IndexFile), inventoryJson)
+    await Fsp.writeFile(Path.join(this.dirPath, InventoryFile), inventoryJson)
   }
 
   async loadInventory(): Promise<Inventory> {
-    const inventoryJson = await Fsp.readFile(Path.join(this.dirPath, IndexFile), 'utf8')
-    const inventory = JSON.parse(inventoryJson)
-    return inventory
+    // Try inventory.json first (Rust proxy), fallback to index.json (legacy)
+    let inventoryPath = Path.join(this.dirPath, InventoryFile)
+    try {
+      const inventoryJson = await Fsp.readFile(inventoryPath, 'utf8')
+      const inventory = JSON.parse(inventoryJson)
+      return inventory
+    } catch {
+      // Fallback to index.json
+      inventoryPath = Path.join(this.dirPath, IndexFile)
+      const inventoryJson = await Fsp.readFile(inventoryPath, 'utf8')
+      const inventory = JSON.parse(inventoryJson)
+      return inventory
+    }
   }
 
   async saveTransactions(transactions: Transaction[]): Promise<Resource[]> {

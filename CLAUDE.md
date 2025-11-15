@@ -48,38 +48,35 @@ yarn adhoc              # Run adhoc.js for development testing
 ### Module Organization
 The codebase follows a modular architecture with clear separation of concerns:
 
-1. **Proxy System** (`proxy.ts`, `recording.ts`, `playback.ts`):
+1. **Proxy System** (`recording.ts`, `playback.ts`):
    - HTTP proxy server that intercepts and records/replays web traffic
-   - Uses http-mitm-proxy for SSL interception
+   - Uses **rust-http-playback-proxy** (Rust-based native module) for high performance
    - Recording captures all resources with timing metadata
-   - Playback reproduces network conditions and resource delivery
+   - Playback reproduces network conditions and resource delivery with ±10% timing accuracy
+   - TypeScript wrappers provide clean integration with the Rust proxy
 
 2. **Inventory Management** (`inventory.ts`):
    - Stores recorded resources as files on disk
    - Format: `inventory/[method]/[protocol]/[hostname]/[...path]`
-   - Metadata stored in `inventory/index.json`
+   - Metadata stored in `inventory/inventory.json` (Rust proxy format) and `inventory/index.json` (legacy format)
    - Supports file watching for live updates during playback
+   - Automatically beautifies minified HTML/CSS/JS for readability
 
 3. **Performance Tools Integration**:
    - **Lighthouse** (`lighthouse.ts`): Runs Google Lighthouse through the proxy
    - **Loadshow** (`loadshow.ts`): Creates videos of page load process
    - Both tools can work in recording or playback mode
+   - Lighthouse throttling is disabled as timing is handled by the Rust proxy
 
-4. **Network Simulation** (`throttling.ts`):
-   - Reproduces original network timing during playback
-   - Simulates latency and throughput constraints
-
-5. **Dependency Injection** (`dependency.ts`):
+4. **Dependency Injection** (`dependency.ts`):
    - Central container for managing service dependencies
    - Allows easy mocking and testing
 
 ### CLI Command Structure
-The `psq` command has five main subcommands:
+The `psq` command has three main subcommands:
 - `lighthouse [recording|playback]` - Performance testing with Lighthouse
-- `loadshow [recording|playback]` - Video generation with loadshow  
-- `proxy` - Standalone proxy server with file watching
-- `recording` - Start HTTP proxy in recording mode
-- `playback` - Start HTTP proxy in playback mode
+- `loadshow [recording|playback]` - Video generation with loadshow
+- `proxy` - Standalone proxy server with optional recording mode (`--record <url>`) and file watching in playback mode
 
 ### Testing Strategy
 - Unit tests use AVA framework with NYC for coverage

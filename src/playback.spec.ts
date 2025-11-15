@@ -11,17 +11,16 @@ import { withPlaybackProxy } from './playback.js'
 test('PlaybackProxy', async (t) => {
   await Tmp.withDir(
     async (tmp) => {
-      const sslCaDir = Path.join(tmp.path, 'ca')
-      await Fsp.mkdir(sslCaDir, { recursive: true })
       const inventoryDir = Path.join(tmp.path, 'inventory')
       await Fsp.mkdir(inventoryDir, { recursive: true })
 
-      // Test inventory
+      // Test inventory - Rust proxy expects inventory.json not index.json
       const inventoryRepository = new InventoryRepository(inventoryDir)
+      const entryUrl = 'http://localhost:8099/'
       const resources = await inventoryRepository.saveTransactions([
         {
-          method: 'get',
-          url: 'http://localhost/',
+          method: 'GET',
+          url: entryUrl,
           ttfbMs: 0,
           statusCode: 200,
           rawHeaders: {
@@ -30,7 +29,7 @@ test('PlaybackProxy', async (t) => {
           content: Buffer.from('ok'),
         },
       ])
-      await inventoryRepository.saveInventory({ resources })
+      await inventoryRepository.saveInventory({ resources, entryUrl })
 
       // Playback proxy
       await withPlaybackProxy(
@@ -39,7 +38,7 @@ test('PlaybackProxy', async (t) => {
         },
         {},
         async (proxy) => {
-          const response = await Axios.get(`http://localhost/`, {
+          const response = await Axios.get(entryUrl, {
             proxy: {
               host: 'localhost',
               port: proxy.port,
