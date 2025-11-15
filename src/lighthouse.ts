@@ -6,8 +6,6 @@ export interface ExecLighthouseInput {
   url: string
   proxyPort: number
   deviceType?: DeviceType
-  cpuMultiplier?: string
-  noThrottling?: boolean
   view?: boolean
   artifactsDir?: string
   headless: boolean
@@ -30,21 +28,22 @@ export async function execLighthouse(
     `--output-path=${outputPath}`,
     '--only-categories=performance',
     `--form-factor=${deviceType}`,
+    // Set screen emulation to match form factor
+    `--screenEmulation.mobile=${deviceType === 'mobile' ? 'true' : 'false'}`,
+    // Disable throttling as Rust proxy handles timing accurately
+    '--throttling.rttMs=0',
+    '--throttling.throughputKbps=0',
+    '--throttling.downloadThroughputKbps=0',
+    '--throttling.uploadThroughputKbps=0',
+    '--throttling.cpuSlowdownMultiplier=1',
   ]
-
-  if (opts.noThrottling) {
-    args.push(
-      '--throttling.rttMs=0',
-      '--throttling.throughputKbps=0',
-      '--throttling.downloadThroughputKbps=0',
-      '--throttling.uploadThroughputKbps=0',
-      '--throttling.cpuSlowdownMultiplier=1'
-    )
-  } else if (opts.cpuMultiplier) args.push(`--throttling.cpuSlowdownMultiplier=${opts.cpuMultiplier}`)
 
   args.push(`--max-wait-for-load=${opts.timeout}`)
 
-  const chromeFlags: string[] = ['--ignore-certificate-errors', `--proxy-server=http://localhost:${opts.proxyPort}`]
+  const chromeFlags: string[] = [
+    '--ignore-certificate-errors',
+    `--proxy-server=http://localhost:${opts.proxyPort}`,
+  ]
   if (opts.headless) chromeFlags.push('--headless')
   args.push(`--chrome-flags="${chromeFlags.join(' ')}"`)
 

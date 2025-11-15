@@ -1,151 +1,93 @@
-import { IncomingHttpHeaders } from 'http'
+import { Proxy as RustProxy, startRecording } from 'rust-http-playback-proxy'
 
-import { Inventory, Transaction } from './inventory.js'
-import { Proxy, ProxyDependency, ProxyOptions } from './proxy.js'
+import { InventoryRepository } from './inventory.js'
+import { DependencyInterface, DeviceType } from './types.js'
 
-export interface RecordingTransaction {
-  startedAt?: Date
-  responseStartedAt?: Date
-  responseEndedAt?: Date
-  method: string
-  url: string
-  statusCode?: number
-  incomingHttpHeaders?: IncomingHttpHeaders
-  contentChunks: Buffer[]
-  err?: Error
-  errKind?: string
+export interface RecordingProxyOptions {
+  inventoryRepository?: InventoryRepository
+  entryUrl?: string
+  deviceType?: DeviceType
+  port?: number
 }
 
-export interface RecordingSession {
-  startedAt?: Date
-  transactions: RecordingTransaction[]
-}
+export type RecordingProxyDependency = Pick<DependencyInterface, 'logger'>
 
-export class RecordingProxy extends Proxy {
-  startedAt?: Date
-  transactions: RecordingTransaction[] = []
+export class RecordingProxy {
+  rustProxy?: RustProxy
+  inventoryRepository!: InventoryRepository
+  entryUrl?: string
+  deviceType?: DeviceType
+  requestedPort?: number
+  dependency: RecordingProxyDependency
 
-  async setup(): Promise<void> {
-    this.startedAt = new Date()
+  constructor(options?: RecordingProxyOptions, dependency?: RecordingProxyDependency) {
+    options ||= {}
+    this.dependency = dependency || {}
 
-    let requestNumber = 1
-    this.proxy.onRequest((ctx, onRequestComplete) => {
-      const number = requestNumber++
+    // Inventory repository
+    this.inventoryRepository = options.inventoryRepository ?? new InventoryRepository(undefined, this.dependency)
 
-      // Skip websocket
-      if (ctx.clientToProxyRequest.headers?.upgrade === 'websocket') {
-        this.dependency.logger?.warn(
-          { number },
-          `Request #${number} ${ctx.clientToProxyRequest.url} skipped (websocket)`
-        )
-        return
-      }
+    // Entry URL
+    this.entryUrl = options.entryUrl
 
-      // Throttling
-      const filter = this.createThrottlingTransform()
-      if (filter) ctx.addResponseFilter(filter)
+    // Device type
+    this.deviceType = options.deviceType
 
-      const identifier = Proxy.contextRequest(ctx)
-      const transaction: RecordingTransaction = {
-        startedAt: new Date(),
-        ...identifier,
-        contentChunks: [],
-      }
+    // Port
+    this.requestedPort = options.port
+  }
 
-      this.dependency.logger?.debug({ number, identifier }, `Request #${number} ${transaction.url} started`)
+  async start() {
+    this.dependency.logger?.info(`Starting recording proxy...`)
 
-      ctx.onError((_, err, errKind) => {
-        transaction.responseStartedAt = new Date()
-        transaction.err = err
-        transaction.errKind = errKind
-        this.dependency.logger?.warn(
-          { number, identifier, err },
-          `Request #${number} ${transaction.url} failed: ${err.message}`
-        )
-      })
+    const proxyPort = this.requestedPort || 0
 
-      ctx.onResponse((_, onResponseComplete) => {
-        transaction.responseStartedAt = new Date()
-        transaction.statusCode = ctx.serverToProxyResponse.statusCode
-        transaction.incomingHttpHeaders = ctx.serverToProxyResponse.headers
-        this.dependency.logger?.debug({ number, identifier }, `Request #${number} ${transaction.url} responded`)
-        onResponseComplete()
-      })
-
-      ctx.onResponseData((_, chunk, onResponseDataComplete) => {
-        transaction.contentChunks.push(chunk)
-        onResponseDataComplete(null, chunk)
-      })
-
-      ctx.onResponseEnd((_, onResponseEndComplete) => {
-        transaction.responseEndedAt = new Date()
-        this.transactions.push(transaction)
-        this.dependency.logger?.debug({ number, identifier }, `Request #${number} ${transaction.url} completed`)
-        onResponseEndComplete()
-      })
-
-      onRequestComplete()
+    this.rustProxy = await startRecording({
+      entryUrl: this.entryUrl,
+      deviceType: this.deviceType,
+      inventoryDir: this.inventoryRepository.dirPath,
+      port: proxyPort,
     })
+
+    this.dependency.logger?.info(`Recording proxy started on port ${this.rustProxy.port}`)
   }
 
-  async saveInventory() {
-    const transactions: Transaction[] = []
+  get port(): number {
+    if (!this.rustProxy) throw new Error('Proxy not started')
+    return this.rustProxy.port
+  }
 
-    for (const requestTransaction of this.transactions) {
-      const transaction: Transaction = {
-        method: requestTransaction.method,
-        url: requestTransaction.url,
-        ttfbMs: 0,
-        content: Buffer.concat(requestTransaction.contentChunks),
-      }
+  get inventoryDirPath(): string {
+    return this.inventoryRepository.dirPath
+  }
 
-      // ttfb and duration
-      if (requestTransaction.responseStartedAt) {
-        transaction.ttfbMs = +requestTransaction.responseStartedAt - +requestTransaction.startedAt
+  async stop() {
+    if (this.rustProxy) {
+      this.dependency.logger?.info(`Stopping recording proxy...`)
 
-        if (requestTransaction.responseEndedAt) {
-          transaction.durationMs = +requestTransaction.responseEndedAt - +requestTransaction.responseStartedAt
-        }
-      }
+      // Stop the proxy (this triggers graceful shutdown via SIGTERM signal)
+      // The Rust proxy will save index.json automatically during graceful shutdown
+      await this.rustProxy.stop()
 
-      // error
-      if (requestTransaction.err) {
-        transaction.errorMessage = requestTransaction.err.message
-      }
+      // Wait for the Rust proxy to finish writing files to disk
+      // The Rust proxy needs time to process resources and save index.json
+      await new Promise((resolve) => setTimeout(resolve, 2000))
 
-      // status code
-      if (requestTransaction.statusCode) {
-        transaction.statusCode = requestTransaction.statusCode
-      }
-
-      // headers
-      if (requestTransaction.incomingHttpHeaders) {
-        transaction.rawHeaders = {}
-        for (const [key, value] of Object.entries(requestTransaction.incomingHttpHeaders)) {
-          transaction.rawHeaders[key.toLowerCase()] = value.toString()
-        }
-      }
-
-      transactions.push(transaction)
+      this.dependency.logger?.info(`Recording proxy stopped`)
     }
-
-    const resources = await this.inventoryRepository.saveTransactions(transactions)
-    const inventory: Inventory = { entryUrl: this.entryUrl, deviceType: this.deviceType, resources }
-    await this.inventoryRepository.saveInventory(inventory)
-  }
-
-  async shutdown(): Promise<void> {
-    await this.saveInventory()
   }
 }
 
 export async function withRecordingProxy(
-  options: ProxyOptions,
-  dependency: ProxyDependency,
+  options: RecordingProxyOptions,
+  dependency: RecordingProxyDependency,
   cb: (proxy: RecordingProxy) => Promise<void>
 ): Promise<void> {
   const proxy = new RecordingProxy(options, dependency)
   await proxy.start()
-  await cb(proxy)
-  await proxy.stop()
+  try {
+    await cb(proxy)
+  } finally {
+    await proxy.stop()
+  }
 }

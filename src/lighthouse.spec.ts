@@ -21,6 +21,11 @@ test('lighthouse - default', async (t) => {
         '--output-path=artifacts/lighthouse',
         '--only-categories=performance',
         '--form-factor=mobile',
+        '--throttling.rttMs=0',
+        '--throttling.throughputKbps=0',
+        '--throttling.downloadThroughputKbps=0',
+        '--throttling.uploadThroughputKbps=0',
+        '--throttling.cpuSlowdownMultiplier=1',
         '--max-wait-for-load=60000',
         '--chrome-flags="--ignore-certificate-errors --proxy-server=http://localhost:8080"',
       ])
@@ -48,6 +53,11 @@ test('lighthouse - desktop', async (t) => {
         '--output-path=artifacts/lighthouse',
         '--only-categories=performance',
         '--form-factor=desktop',
+        '--throttling.rttMs=0',
+        '--throttling.throughputKbps=0',
+        '--throttling.downloadThroughputKbps=0',
+        '--throttling.uploadThroughputKbps=0',
+        '--throttling.cpuSlowdownMultiplier=1',
         '--max-wait-for-load=30000',
         '--chrome-flags="--ignore-certificate-errors --proxy-server=http://localhost:8080"',
       ])
@@ -55,11 +65,10 @@ test('lighthouse - desktop', async (t) => {
   })
 })
 
-test('lighthouse - noThrottling, headless', async (t) => {
+test('lighthouse - headless', async (t) => {
   const input: ExecLighthouseInput = {
     url: 'https://example.com',
     proxyPort: 8080,
-    noThrottling: true,
     headless: true,
     timeout: 30000,
   }

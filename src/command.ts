@@ -8,7 +8,7 @@ import { execLighthouse } from './lighthouse.js'
 import { execLoadshow } from './loadshow.js'
 import { DeviceType } from './types.js'
 
-import { InventoryRepository, ProxyOptions, withPlaybackProxy, withRecordingProxy } from './index.js'
+import { InventoryRepository, withPlaybackProxy, withRecordingProxy } from './index.js'
 
 const dependency = new Dependency()
 
@@ -46,7 +46,6 @@ function registerLighthouseCommands(main: Command) {
             url,
             proxyPort: proxy.port,
             deviceType,
-            noThrottling: true,
             view: false,
             artifactsDir,
             headless: quiet,
@@ -117,10 +116,8 @@ function registerLoadshowCommands(main: Command) {
 
   const playback = loadshow.command('playback')
   playback.description('Playback contents for loadshow')
-  playback.option('-l, --lighthouse', 'Loadshow with lighthouse throttling')
   playback.action(async () => {
     const inventoryRepository = new InventoryRepository(main.opts().inventory || './inventory')
-    const lighthouse: boolean = playback.opts().lighthouse
     const artifactsDir = loadshow.opts().artifacts || './artifacts'
     const credit = loadshow.opts().credit || ''
     const timeout = Number(loadshow.opts().timeout || '30000')
@@ -136,7 +133,6 @@ function registerLoadshowCommands(main: Command) {
             url: proxy.entryUrl,
             proxyPort: proxy.port,
             deviceType: proxy.deviceType,
-            syncLighthouseSpec: lighthouse,
             artifactsDir,
             credit,
             timeout,
@@ -156,10 +152,7 @@ function registerProxyCommands(main: Command) {
 
   proxy.action(async () => {
     const inventoryRepository = new InventoryRepository(main.opts().inventory || './inventory')
-    const proxyOptions: ProxyOptions = {
-      inventoryRepository,
-      port: Number(proxy.opts().port || '8080'),
-    }
+    const port = Number(proxy.opts().port || '8080')
 
     if (proxy.opts().record) {
       const url = proxy.opts().record
@@ -168,8 +161,8 @@ function registerProxyCommands(main: Command) {
       }
 
       // Recordingモード
-      await withRecordingProxy({ ...proxyOptions, entryUrl: url }, dependency, async () => {
-        dependency.logger?.info(`Recording proxy started on port ${proxyOptions.port}. Press Ctrl+C to stop.`)
+      await withRecordingProxy({ inventoryRepository, port, entryUrl: url }, dependency, async () => {
+        dependency.logger?.info(`Recording proxy started on port ${port}. Press Ctrl+C to stop.`)
 
         // Wait for Ctrl+C signal
         return new Promise<void>((resolve) => {
@@ -183,7 +176,7 @@ function registerProxyCommands(main: Command) {
       // Playbackモード
       // eslint-disable-next-line no-constant-condition
       while (true) {
-        await withPlaybackProxy(proxyOptions, dependency, async () => {
+        await withPlaybackProxy({ inventoryRepository, port }, dependency, async () => {
           const watcher = Watch(inventoryRepository.dirPath, { recursive: true })
           return new Promise((ok) => {
             watcher.on('change', () => {
