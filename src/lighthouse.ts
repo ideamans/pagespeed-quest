@@ -40,10 +40,7 @@ export async function execLighthouse(
 
   args.push(`--max-wait-for-load=${opts.timeout}`)
 
-  const chromeFlags: string[] = [
-    '--ignore-certificate-errors',
-    `--proxy-server=http://localhost:${opts.proxyPort}`,
-  ]
+  const chromeFlags: string[] = ['--ignore-certificate-errors', `--proxy-server=http://localhost:${opts.proxyPort}`]
   if (opts.headless) chromeFlags.push('--headless')
   args.push(`--chrome-flags="${chromeFlags.join(' ')}"`)
 
