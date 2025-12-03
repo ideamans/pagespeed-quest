@@ -40,4 +40,4 @@ export async function playback() {
   )
 }
 
-playback()
+recording().then(playback)

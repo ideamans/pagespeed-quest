@@ -1,5 +1,6 @@
 import Path from 'path'
 
+import { captureLighthouseDigest } from './lighthouse-digest.js'
 import { DependencyInterface, DeviceType } from './types.js'
 
 export interface ExecLighthouseInput {
@@ -10,11 +11,12 @@ export interface ExecLighthouseInput {
   artifactsDir?: string
   headless: boolean
   timeout: number
+  captureScoreAndMetrics?: boolean
 }
 
 export async function execLighthouse(
   opts: ExecLighthouseInput,
-  dependency: Pick<DependencyInterface, 'mkdirp' | 'executeLighthouse'>
+  dependency: Pick<DependencyInterface, 'mkdirp' | 'executeLighthouse' | 'logger'>
 ): Promise<void> {
   const artifactsDir = opts.artifactsDir || './artifacts'
   await dependency.mkdirp(artifactsDir)
@@ -47,4 +49,22 @@ export async function execLighthouse(
   if (opts.view) args.push('--view')
 
   await dependency.executeLighthouse(args)
+
+  // Capture score and metrics screenshot if requested
+  if (opts.captureScoreAndMetrics !== false) {
+    const htmlPath = `${outputPath}.report.html`
+    const digestPath = Path.join(artifactsDir, 'lighthouse.digest.png')
+
+    try {
+      await captureLighthouseDigest(
+        {
+          htmlPath,
+          outputPath: digestPath,
+        },
+        dependency
+      )
+    } catch (error) {
+      dependency.logger?.warn(`Failed to capture Lighthouse score and metrics: ${error}`)
+    }
+  }
 }
