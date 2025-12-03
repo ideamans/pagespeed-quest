@@ -58,10 +58,12 @@
     "jschardet": "^3.0.0",
     "lighthouse": "^12.2.1",
     "loadshow": "1.2.0",
+    "node-html-to-image": "^5.0.0",
     "node-watch": "^0.7.4",
     "pino": "^9.4.0",
     "pino-pretty": "^11.2.2",
     "prettier": "^2.1.1",
+    "puppeteer": "^24.31.0",
     "rust-http-playback-proxy": "0.4.2",
     "tmp-promise": "^3.0.3"
   },

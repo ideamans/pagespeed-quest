@@ -8,6 +8,7 @@ test('lighthouse - default', async (t) => {
     proxyPort: 8080,
     headless: false,
     timeout: 60000,
+    captureScoreAndMetrics: false, // Disable score and metrics capture in tests
   }
   await execLighthouse(input, {
     mkdirp: async (path: string) => {
@@ -41,6 +42,7 @@ test('lighthouse - desktop', async (t) => {
     deviceType: 'desktop',
     headless: false,
     timeout: 30000,
+    captureScoreAndMetrics: false, // Disable score and metrics capture in tests
   }
   await execLighthouse(input, {
     mkdirp: async (path: string) => {
@@ -73,6 +75,7 @@ test('lighthouse - headless', async (t) => {
     proxyPort: 8080,
     headless: true,
     timeout: 30000,
+    captureScoreAndMetrics: false, // Disable score and metrics capture in tests
   }
   await execLighthouse(input, {
     mkdirp: async (path: string) => {
