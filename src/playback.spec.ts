@@ -6,7 +6,18 @@ import test from 'ava'
 import Tmp from 'tmp-promise'
 
 import { InventoryRepository } from './inventory.js'
-import { withPlaybackProxy } from './playback.js'
+import { PlaybackProxy, withPlaybackProxy } from './playback.js'
+
+test('PlaybackProxy - port throws error when not started', (t) => {
+  const proxy = new PlaybackProxy()
+  const error = t.throws(() => proxy.port)
+  t.is(error?.message, 'Proxy not started')
+})
+
+test('PlaybackProxy - inventoryDirPath returns default path', (t) => {
+  const proxy = new PlaybackProxy()
+  t.true(proxy.inventoryDirPath.endsWith('inventory'))
+})
 
 test('PlaybackProxy', async (t) => {
   await Tmp.withDir(

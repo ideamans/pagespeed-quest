@@ -41,3 +41,14 @@ test('Identity encoding', async (t) => {
   const decoded = await decompress('identity', encoded)
   t.deepEqual(decoded, original)
 })
+
+test('Compress encoding (uses gzip internally)', async (t) => {
+  const original = Buffer.from('x'.repeat(1000))
+
+  const encoded = await compress('compress', original)
+  // compress uses gzip internally, so it should compress
+  t.true(encoded.length < original.length)
+
+  const decoded = await decompress('compress', encoded)
+  t.deepEqual(decoded, original)
+})

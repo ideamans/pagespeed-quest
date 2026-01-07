@@ -107,3 +107,23 @@ test('loadshow - with credit', async (t) => {
     },
   })
 })
+
+test('loadshow - custom artifacts directory', async (t) => {
+  const spec: ExecLoadshowInput = {
+    url: 'https://example.com',
+    proxyPort: 8080,
+    timeout: 30000,
+    artifactsDir: './custom-artifacts',
+  }
+  await execLoadshow(spec, {
+    mkdirp: async (path: string) => {
+      t.is(path, 'custom-artifacts/loadshow')
+    },
+    executeLoadshow: async (args: string[]) => {
+      t.true(args.includes('--output'))
+      t.true(args.includes('custom-artifacts/loadshow.mp4'))
+      t.true(args.includes('--debug-dir'))
+      t.true(args.includes('custom-artifacts/loadshow'))
+    },
+  })
+})

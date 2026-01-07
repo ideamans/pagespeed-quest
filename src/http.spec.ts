@@ -6,6 +6,10 @@ test('normalizeUrl', (t) => {
   t.is(normalizeUrl('http://example.com/?ts=123').href, 'http://example.com/?ts=')
   t.is(normalizeUrl('http://example.com/?foo=foo&ts=123').href, 'http://example.com/?foo=foo&ts=')
   t.is(normalizeUrl('http://example.com/?foo=foo&ts=123&bar=bar').href, 'http://example.com/?foo=foo&ts=&bar=bar')
+  // URL without query params
+  t.is(normalizeUrl('http://example.com/').href, 'http://example.com/')
+  // URL object as input
+  t.is(normalizeUrl(new URL('http://example.com/?ts=123')).href, 'http://example.com/?ts=')
 })
 
 test('urlToContentFilePath', (t) => {
