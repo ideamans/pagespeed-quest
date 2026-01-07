@@ -4,6 +4,7 @@ import Path from 'path'
 import test from 'ava'
 
 import { captureLighthouseDigest } from './lighthouse-digest.js'
+import { DependencyInterface } from './types.js'
 
 // Create a minimal HTML file for testing
 const createTestHTML = async (path: string) => {
@@ -53,7 +54,7 @@ test('captureLighthouseDigest - creates digest screenshot', async (t) => {
           info: () => undefined,
           warn: () => undefined,
           error: () => undefined,
-        } as unknown as any,
+        } as unknown as DependencyInterface['logger'],
         mkdirp: async () => undefined,
       }
     )
@@ -89,7 +90,7 @@ test('captureLighthouseDigest - throws error when elements not found', async (t)
               info: () => undefined,
               warn: () => undefined,
               error: () => undefined,
-            } as unknown as any,
+            } as unknown as DependencyInterface['logger'],
             mkdirp: async () => undefined,
           }
         )
