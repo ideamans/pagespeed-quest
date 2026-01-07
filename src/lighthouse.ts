@@ -1,6 +1,7 @@
 import Path from 'path'
 
 import { captureLighthouseDigest } from './lighthouse-digest.js'
+import { generateLighthouseSummary } from './lighthouse-summary.js'
 import { DependencyInterface, DeviceType } from './types.js'
 
 export interface ExecLighthouseInput {
@@ -65,6 +66,24 @@ export async function execLighthouse(
       )
     } catch (error) {
       dependency.logger?.warn(`Failed to capture Lighthouse score and metrics: ${error}`)
+    }
+  }
+
+  // Generate summary markdown
+  if (opts.artifactsDir) {
+    const jsonPath = `${outputPath}.report.json`
+    const summaryPath = Path.join(artifactsDir, 'summary.md')
+
+    try {
+      await generateLighthouseSummary(
+        {
+          jsonPath,
+          outputPath: summaryPath,
+        },
+        dependency
+      )
+    } catch (error) {
+      dependency.logger?.warn(`Failed to generate Lighthouse summary: ${error}`)
     }
   }
 }
