@@ -32,7 +32,8 @@ export class Dependency implements DependencyInterface {
   }
 
   async executeLoadshow(args: string[]): Promise<void> {
-    const loadshowPath = process.env.LOADSHOW_PATH || './node_modules/.bin/loadshow'
+    const binaryName = process.platform === 'win32' ? 'loadshow.exe' : 'loadshow'
+    const loadshowPath = process.env.LOADSHOW_PATH || `./bin/${binaryName}`
     await execa(loadshowPath, args, { stdout: 'inherit', stderr: 'inherit' })
   }
 }
