@@ -1,6 +1,6 @@
 {
   "name": "pagespeed-quest",
-  "version": "0.6.2",
+  "version": "0.7.0",
   "type": "module",
   "description": "A framework for efficient web front-end speed improvement",
   "main": "build/index.js",
@@ -46,7 +46,8 @@
     "prepare-release": "run-s reset-hard test cov:check doc:html version doc:publish",
     "adhoc": "yarn build && node build/adhoc.js",
     "command": "yarn build && node build/command.js",
-    "prepublishOnly": "yarn build"
+    "prepublishOnly": "yarn build",
+    "postinstall": "node scripts/postinstall.js"
   },
   "engines": {
     "node": ">=18"
@@ -57,7 +58,6 @@
     "iconv-lite": "^0.6.3",
     "jschardet": "^3.0.0",
     "lighthouse": "^12.2.1",
-    "loadshow": "1.2.0",
     "node-html-to-image": "^5.0.0",
     "node-watch": "^0.7.4",
     "pino": "^9.4.0",
@@ -93,6 +93,7 @@
   },
   "files": [
     "build",
+    "scripts",
     "!**/*.spec.*",
     "!**/*.json",
     "CHANGELOG.md",

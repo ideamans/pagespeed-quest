@@ -2,35 +2,35 @@ import test from 'ava'
 
 import { execLoadshow, ExecLoadshowInput } from './loadshow.js'
 
-test('loadshow - default', async (t) => {
+test('loadshow - default (mobile)', async (t) => {
   const spec: ExecLoadshowInput = {
     url: 'https://example.com',
     proxyPort: 8080,
     timeout: 60000,
   }
-  execLoadshow(spec, {
+  await execLoadshow(spec, {
     mkdirp: async (path: string) => {
       t.is(path, 'artifacts/loadshow')
     },
     executeLoadshow: async (args: string[]) => {
       t.deepEqual(args, [
         'record',
-        '-a',
+        '--preset',
+        'mobile',
+        '--columns',
+        '3',
+        '--timeout-sec',
+        '60',
+        '--proxy-server',
+        'http://localhost:8080',
+        '--ignore-https-errors',
+        '--debug-dir',
         'artifacts/loadshow',
-        '-u',
-        'layout.columns=3',
-        '-u',
-        'recording.viewportWidth=412',
-        '-u',
-        'recording.cpuThrottling=4',
-        '-u',
-        'recording.timeoutMs=60000',
-        '-u',
-        'recording.headers.User-Agent=Mozilla/5.0 (Linux; Android 11; moto g power (2022)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Mobile Safari/537.36',
-        '-u',
-        'recording.puppeteer.args=--ignore-certificate-errors,--proxy-server=http://localhost:8080',
-        'https://example.com',
+        '--output-summary',
+        'artifacts/loadshow/summary.md',
+        '--output',
         'artifacts/loadshow.mp4',
+        'https://example.com',
       ])
     },
   })
@@ -43,29 +43,29 @@ test('loadshow - desktop', async (t) => {
     deviceType: 'desktop',
     timeout: 30000,
   }
-  execLoadshow(spec, {
+  await execLoadshow(spec, {
     mkdirp: async (path: string) => {
       t.is(path, 'artifacts/loadshow')
     },
     executeLoadshow: async (args: string[]) => {
       t.deepEqual(args, [
         'record',
-        '-a',
+        '--preset',
+        'desktop',
+        '--columns',
+        '2',
+        '--timeout-sec',
+        '30',
+        '--proxy-server',
+        'http://localhost:8080',
+        '--ignore-https-errors',
+        '--debug-dir',
         'artifacts/loadshow',
-        '-u',
-        'layout.columns=2',
-        '-u',
-        'recording.viewportWidth=1350',
-        '-u',
-        'recording.cpuThrottling=1',
-        '-u',
-        'recording.timeoutMs=30000',
-        '-u',
-        'recording.headers.User-Agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
-        '-u',
-        'recording.puppeteer.args=--ignore-certificate-errors,--proxy-server=http://localhost:8080',
-        'https://example.com',
+        '--output-summary',
+        'artifacts/loadshow/summary.md',
+        '--output',
         'artifacts/loadshow.mp4',
+        'https://example.com',
       ])
     },
   })
@@ -78,32 +78,52 @@ test('loadshow - with credit', async (t) => {
     timeout: 30000,
     credit: 'Test Credit',
   }
-  execLoadshow(spec, {
+  await execLoadshow(spec, {
     mkdirp: async (path: string) => {
       t.is(path, 'artifacts/loadshow')
     },
     executeLoadshow: async (args: string[]) => {
       t.deepEqual(args, [
         'record',
-        '-a',
+        '--preset',
+        'mobile',
+        '--columns',
+        '3',
+        '--timeout-sec',
+        '30',
+        '--proxy-server',
+        'http://localhost:8080',
+        '--ignore-https-errors',
+        '--credit',
+        'Test Credit',
+        '--debug-dir',
         'artifacts/loadshow',
-        '-u',
-        'layout.columns=3',
-        '-u',
-        'recording.viewportWidth=412',
-        '-u',
-        'recording.cpuThrottling=4',
-        '-u',
-        'recording.timeoutMs=30000',
-        '-u',
-        'recording.headers.User-Agent=Mozilla/5.0 (Linux; Android 11; moto g power (2022)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Mobile Safari/537.36',
-        '-u',
-        'recording.puppeteer.args=--ignore-certificate-errors,--proxy-server=http://localhost:8080',
-        '-u',
-        'banner.vars.credit=Test Credit',
-        'https://example.com',
+        '--output-summary',
+        'artifacts/loadshow/summary.md',
+        '--output',
         'artifacts/loadshow.mp4',
+        'https://example.com',
       ])
+    },
+  })
+})
+
+test('loadshow - custom artifacts directory', async (t) => {
+  const spec: ExecLoadshowInput = {
+    url: 'https://example.com',
+    proxyPort: 8080,
+    timeout: 30000,
+    artifactsDir: './custom-artifacts',
+  }
+  await execLoadshow(spec, {
+    mkdirp: async (path: string) => {
+      t.is(path, 'custom-artifacts/loadshow')
+    },
+    executeLoadshow: async (args: string[]) => {
+      t.true(args.includes('--output'))
+      t.true(args.includes('custom-artifacts/loadshow.mp4'))
+      t.true(args.includes('--debug-dir'))
+      t.true(args.includes('custom-artifacts/loadshow'))
     },
   })
 })

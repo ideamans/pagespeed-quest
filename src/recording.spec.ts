@@ -7,7 +7,18 @@ import test from 'ava'
 import Tmp from 'tmp-promise'
 
 import { InventoryRepository } from './inventory.js'
-import { withRecordingProxy } from './recording.js'
+import { RecordingProxy, withRecordingProxy } from './recording.js'
+
+test('RecordingProxy - port throws error when not started', (t) => {
+  const proxy = new RecordingProxy()
+  const error = t.throws(() => proxy.port)
+  t.is(error?.message, 'Proxy not started')
+})
+
+test('RecordingProxy - inventoryDirPath returns default path', (t) => {
+  const proxy = new RecordingProxy()
+  t.true(proxy.inventoryDirPath.endsWith('inventory'))
+})
 
 test('RecordingProxy', async (t) => {
   await Tmp.withDir(

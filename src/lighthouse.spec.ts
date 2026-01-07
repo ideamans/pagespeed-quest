@@ -101,3 +101,41 @@ test('lighthouse - headless', async (t) => {
     },
   })
 })
+
+test('lighthouse - with view option', async (t) => {
+  const input: ExecLighthouseInput = {
+    url: 'https://example.com',
+    proxyPort: 8080,
+    headless: false,
+    timeout: 30000,
+    view: true,
+    captureScoreAndMetrics: false,
+  }
+  await execLighthouse(input, {
+    mkdirp: async (path: string) => {
+      t.is(path, './artifacts')
+    },
+    executeLighthouse: async (args: string[]) => {
+      t.true(args.includes('--view'))
+    },
+  })
+})
+
+test('lighthouse - custom artifacts directory', async (t) => {
+  const input: ExecLighthouseInput = {
+    url: 'https://example.com',
+    proxyPort: 8080,
+    headless: false,
+    timeout: 30000,
+    artifactsDir: './custom-artifacts',
+    captureScoreAndMetrics: false,
+  }
+  await execLighthouse(input, {
+    mkdirp: async (path: string) => {
+      t.is(path, './custom-artifacts')
+    },
+    executeLighthouse: async (args: string[]) => {
+      t.true(args.includes('--output-path=custom-artifacts/lighthouse'))
+    },
+  })
+})

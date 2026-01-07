@@ -1,7 +1,5 @@
 import Path from 'path'
 
-import { defaultConfig, desktopConfig } from 'lighthouse'
-
 import { DependencyInterface, DeviceType } from './types.js'
 
 export interface ExecLoadshowInput {
@@ -14,36 +12,47 @@ export interface ExecLoadshowInput {
 }
 
 export interface ExecLoadshowSpec {
+  preset?: 'desktop' | 'mobile'
   viewportWidth?: number
   columns?: number
   cpuThrottling?: number
-  timeoutMs?: number
-  userAgent?: string
+  timeoutSec?: number
   proxyPort?: number
   credit?: string
+  debugDir?: string
+  outputSummary?: string
 }
 
 function execSpecToCommandArgs(spec: ExecLoadshowSpec): string[] {
   const args: string[] = []
 
+  // preset
+  if (spec.preset !== undefined) args.push('--preset', spec.preset)
+
   // layout
-  if (spec.columns !== undefined) args.push('-u', `layout.columns=${spec.columns}`)
+  if (spec.columns !== undefined) args.push('--columns', String(spec.columns))
 
-  // recording
-  if (spec.viewportWidth !== undefined) args.push('-u', `recording.viewportWidth=${spec.viewportWidth}`)
-  if (spec.cpuThrottling !== undefined) args.push('-u', `recording.cpuThrottling=${spec.cpuThrottling}`)
-  if (spec.timeoutMs !== undefined) args.push('-u', `recording.timeoutMs=${spec.timeoutMs}`)
-  if (spec.userAgent !== undefined) args.push('-u', `recording.headers.User-Agent=${spec.userAgent}`)
+  // browser settings
+  if (spec.viewportWidth !== undefined) args.push('--viewport-width', String(spec.viewportWidth))
+  if (spec.cpuThrottling !== undefined) args.push('--cpu-throttling', String(spec.cpuThrottling))
 
-  // recording.puppeteer
-  const chromeArgs: string[] = ['--ignore-certificate-errors']
+  // timeout
+  if (spec.timeoutSec !== undefined) args.push('--timeout-sec', String(spec.timeoutSec))
+
+  // proxy settings
   if (spec.proxyPort !== undefined) {
-    chromeArgs.push(`--proxy-server=http://localhost:${spec.proxyPort}`)
+    args.push('--proxy-server', `http://localhost:${spec.proxyPort}`)
+    args.push('--ignore-https-errors')
   }
-  args.push('-u', 'recording.puppeteer.args=' + chromeArgs.join(','))
 
   // credit
-  if (spec.credit) args.push('-u', `banner.vars.credit=${spec.credit}`)
+  if (spec.credit) args.push('--credit', spec.credit)
+
+  // debug directory
+  if (spec.debugDir) args.push('--debug-dir', spec.debugDir)
+
+  // output summary
+  if (spec.outputSummary) args.push('--output-summary', spec.outputSummary)
 
   return args
 }
@@ -55,29 +64,32 @@ export async function execLoadshow(
   const artifactsDir = input.artifactsDir || './artifacts'
   const loadshowDir = Path.join(artifactsDir, 'loadshow')
   const outputPath = Path.join(artifactsDir, 'loadshow.mp4')
+  const summaryPath = Path.join(loadshowDir, 'summary.md')
   await dependency.mkdirp(loadshowDir)
 
   // By form factor
-  const lighthouseByDevice = input.deviceType === 'desktop' ? desktopConfig : defaultConfig
+  const preset: 'desktop' | 'mobile' = input.deviceType === 'desktop' ? 'desktop' : 'mobile'
   const customByDevice = input.deviceType === 'desktop' ? { columns: 2 } : { columns: 3 }
 
+  // Convert timeout from milliseconds to seconds
+  const timeoutSec = Math.ceil(input.timeout / 1000)
+
   // Basic spec
-  const userAgent = lighthouseByDevice.settings?.emulatedUserAgent
   const spec: ExecLoadshowSpec = {
+    preset,
     proxyPort: input.proxyPort,
     columns: customByDevice.columns,
-    viewportWidth: lighthouseByDevice.settings?.screenEmulation?.width,
-    cpuThrottling: lighthouseByDevice.settings?.throttling?.cpuSlowdownMultiplier,
-    userAgent: typeof userAgent === 'string' ? userAgent : undefined,
-    timeoutMs: input.timeout,
+    timeoutSec,
     credit: input.credit,
+    debugDir: loadshowDir,
+    outputSummary: summaryPath,
   }
 
   const args: string[] = []
   args.push('record')
-  args.push('-a', loadshowDir)
   args.push(...execSpecToCommandArgs(spec))
-  args.push(input.url, outputPath)
+  args.push('--output', outputPath)
+  args.push(input.url)
 
   await dependency.executeLoadshow(args)
 }
