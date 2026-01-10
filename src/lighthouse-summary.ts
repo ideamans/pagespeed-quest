@@ -70,6 +70,7 @@ function getResourceType(mime: string | undefined): ResourceType {
   if (!mime) return 'other'
   if (mime.includes('html')) return 'document'
   if (mime.includes('css')) return 'stylesheet'
+  // cspell:ignore ecmascript
   if (mime.includes('javascript') || mime.includes('ecmascript')) return 'script'
   if (mime.startsWith('image/')) return 'image'
   if (mime.includes('font') || mime.includes('woff') || mime.includes('ttf') || mime.includes('otf')) return 'font'
@@ -104,7 +105,8 @@ async function calculateResourceStats(
     if (!resource.contentFilePath) continue
 
     const type = getResourceType(resource.contentTypeMime)
-    const stat = statsMap.get(type)!
+    const stat = statsMap.get(type)
+    if (!stat) continue
 
     try {
       const filePath = Path.join(inventoryDir, resource.contentFilePath)
