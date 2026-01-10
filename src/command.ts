@@ -61,10 +61,14 @@ function registerLighthouseCommands(main: Command) {
   const playback = lighthouse.command('playback')
   playback.description('Playback contents for lighthouse')
   playback.action(async () => {
-    const inventoryRepository = new InventoryRepository(main.opts().inventory || './inventory')
+    const inventoryDir = main.opts().inventory || './inventory'
+    const inventoryRepository = new InventoryRepository(inventoryDir)
     const artifactsDir = lighthouse.opts().artifacts || './artifacts'
     const quiet = !!lighthouse.opts().quiet
     const timeout = Number(lighthouse.opts().timeout || '30000')
+
+    // Load inventory for traffic statistics
+    const inventory = await inventoryRepository.loadInventory()
 
     await withPlaybackProxy(
       {
@@ -81,6 +85,8 @@ function registerLighthouseCommands(main: Command) {
             artifactsDir,
             headless: quiet,
             timeout,
+            inventoryDir,
+            resources: inventory.resources,
           },
           dependency
         )

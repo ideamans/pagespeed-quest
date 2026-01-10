@@ -1,5 +1,6 @@
 import Path from 'path'
 
+import { Resource } from './inventory.js'
 import { captureLighthouseDigest } from './lighthouse-digest.js'
 import { generateLighthouseSummary } from './lighthouse-summary.js'
 import { DependencyInterface, DeviceType } from './types.js'
@@ -13,6 +14,8 @@ export interface ExecLighthouseInput {
   headless: boolean
   timeout: number
   captureScoreAndMetrics?: boolean
+  inventoryDir?: string
+  resources?: Resource[]
 }
 
 export async function execLighthouse(
@@ -79,6 +82,8 @@ export async function execLighthouse(
         {
           jsonPath,
           outputPath: summaryPath,
+          inventoryDir: opts.inventoryDir,
+          resources: opts.resources,
         },
         dependency
       )
