@@ -238,7 +238,11 @@ export async function generateLighthouseSummary(
       for (const stat of stats) {
         lines.push(`- ${stat.type} / ${stat.count} / ${formatBytes(stat.trafficSize)} / ${stat.trafficSize}`)
       }
-      lines.push(`- **total** / ${stats.reduce((sum, s) => sum + s.count, 0)} / ${formatBytes(totals.trafficSize)} / ${totals.trafficSize}`)
+      lines.push(
+        `- **total** / ${stats.reduce((sum, s) => sum + s.count, 0)} / ${formatBytes(totals.trafficSize)} / ${
+          totals.trafficSize
+        }`
+      )
       lines.push('')
 
       // Resource section (decompressed/original size)
@@ -247,7 +251,11 @@ export async function generateLighthouseSummary(
       for (const stat of stats) {
         lines.push(`- ${stat.type} / ${stat.count} / ${formatBytes(stat.resourceSize)} / ${stat.resourceSize}`)
       }
-      lines.push(`- **total** / ${stats.reduce((sum, s) => sum + s.count, 0)} / ${formatBytes(totals.resourceSize)} / ${totals.resourceSize}`)
+      lines.push(
+        `- **total** / ${stats.reduce((sum, s) => sum + s.count, 0)} / ${formatBytes(totals.resourceSize)} / ${
+          totals.resourceSize
+        }`
+      )
       lines.push('')
     }
   }
