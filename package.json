@@ -1,6 +1,6 @@
 {
   "name": "pagespeed-quest",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "type": "module",
   "description": "A framework for efficient web front-end speed improvement",
   "main": "build/index.js",
@@ -64,7 +64,7 @@
     "pino-pretty": "^11.2.2",
     "prettier": "^2.1.1",
     "puppeteer": "^24.31.0",
-    "rust-http-playback-proxy": "0.4.2",
+    "rust-http-playback-proxy": "0.4.3",
     "tmp-promise": "^3.0.3"
   },
   "devDependencies": {

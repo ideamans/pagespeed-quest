@@ -48,7 +48,7 @@ export async function execLighthouse(
 
   const chromeFlags: string[] = ['--ignore-certificate-errors', `--proxy-server=http://localhost:${opts.proxyPort}`]
   if (opts.headless) chromeFlags.push('--headless')
-  args.push(`--chrome-flags="${chromeFlags.join(' ')}"`)
+  args.push(`--chrome-flags=${chromeFlags.join(' ')}`)
 
   if (opts.view) args.push('--view')
 

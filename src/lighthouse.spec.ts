@@ -29,7 +29,7 @@ test('lighthouse - default', async (t) => {
         '--throttling.uploadThroughputKbps=0',
         '--throttling.cpuSlowdownMultiplier=1',
         '--max-wait-for-load=60000',
-        '--chrome-flags="--ignore-certificate-errors --proxy-server=http://localhost:8080"',
+        '--chrome-flags=--ignore-certificate-errors --proxy-server=http://localhost:8080',
       ])
     },
   })
@@ -63,7 +63,7 @@ test('lighthouse - desktop', async (t) => {
         '--throttling.uploadThroughputKbps=0',
         '--throttling.cpuSlowdownMultiplier=1',
         '--max-wait-for-load=30000',
-        '--chrome-flags="--ignore-certificate-errors --proxy-server=http://localhost:8080"',
+        '--chrome-flags=--ignore-certificate-errors --proxy-server=http://localhost:8080',
       ])
     },
   })
@@ -96,7 +96,7 @@ test('lighthouse - headless', async (t) => {
         '--throttling.uploadThroughputKbps=0',
         '--throttling.cpuSlowdownMultiplier=1',
         '--max-wait-for-load=30000',
-        '--chrome-flags="--ignore-certificate-errors --proxy-server=http://localhost:8080 --headless"',
+        '--chrome-flags=--ignore-certificate-errors --proxy-server=http://localhost:8080 --headless',
       ])
     },
   })
