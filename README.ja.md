@@ -82,6 +82,28 @@ Lighthouseとloadshowでは、Webページの読み込みに関するブラウ�
 
 動画によるスピード改善の確認が主な目的である場合は、`loadshow recording`サブコマンドを利用することを推奨します。
 
+### スクリーンショットの撮影とビジュアル比較
+
+`capture`サブコマンドを使うと、再生ページのスクリーンショットを撮影できます。再生プロキシをフルスロットルモード（タイミング制御なし）で起動し、[static-webshot](https://github.com/nicepkg/static-webshot)でスクリーンショットを取得します。
+
+```sh
+yarn psq capture
+```
+
+スクリーンショットは`artifacts/capture.png`として保存されます。
+
+前回のスクリーンショットと比較するには、`--compare`でベースライン画像を指定します。
+
+```sh
+yarn psq capture --compare baseline.png
+```
+
+差分画像が`artifacts/capture-diff.png`に、サマリーが`artifacts/capture-diff.txt`に出力されます。ラベルは`--baseline-label`と`--current-label`でカスタマイズできます。
+
+```sh
+yarn psq capture --compare baseline.png --baseline-label "変更前" --current-label "変更後"
+```
+
 ## 再生プロキシの起動
 
 次のコマンドでWebページを再生するプロキシのみを起動できます。

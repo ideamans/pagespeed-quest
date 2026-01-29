@@ -82,6 +82,28 @@ Lighthouse and loadshow behave slightly differently when it comes to how the bro
 
 If the main goal is to check speed improvements through video, it is recommended to use the `loadshow recording` subcommand.
 
+### Capturing a screenshot and visual comparison
+
+You can capture a screenshot of the playback page using the `capture` subcommand. This launches the playback proxy in full-throttle mode (no timing simulation) and takes a screenshot with [static-webshot](https://github.com/nicepkg/static-webshot).
+
+```sh
+yarn psq capture
+```
+
+The screenshot will be saved as `artifacts/capture.png`.
+
+To compare with a previous screenshot, specify the baseline image with `--compare`:
+
+```sh
+yarn psq capture --compare baseline.png
+```
+
+This generates a diff image at `artifacts/capture-diff.png` and a summary at `artifacts/capture-diff.txt`. You can customize the labels with `--baseline-label` and `--current-label`.
+
+```sh
+yarn psq capture --compare baseline.png --baseline-label "Before" --current-label "After"
+```
+
 ## Launching the playback proxy
 
 You can launch only the proxy that plays back the web page with the following command.
