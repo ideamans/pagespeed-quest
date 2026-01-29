@@ -6,6 +6,7 @@ import { DependencyInterface, DeviceType } from './types.js'
 export interface PlaybackProxyOptions {
   inventoryRepository?: InventoryRepository
   port?: number
+  fullThrottle?: boolean
 }
 
 export type PlaybackProxyDependency = Pick<DependencyInterface, 'logger'>
@@ -16,6 +17,7 @@ export class PlaybackProxy {
   entryUrl?: string
   deviceType?: DeviceType
   requestedPort?: number
+  fullThrottle?: boolean
   dependency: PlaybackProxyDependency
 
   constructor(options?: PlaybackProxyOptions, dependency?: PlaybackProxyDependency) {
@@ -27,6 +29,9 @@ export class PlaybackProxy {
 
     // Port
     this.requestedPort = options.port
+
+    // Full throttle
+    this.fullThrottle = options.fullThrottle
   }
 
   async start() {
@@ -40,6 +45,7 @@ export class PlaybackProxy {
     this.rustProxy = await startPlayback({
       inventoryDir: this.inventoryRepository.dirPath,
       port: this.requestedPort || 0,
+      fullThrottle: this.fullThrottle,
     })
 
     this.dependency.logger?.info(`Playback proxy started on port ${this.rustProxy.port}`)

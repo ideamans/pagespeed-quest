@@ -9,4 +9,5 @@ export interface DependencyInterface {
 
   executeLighthouse(args: string[]): Promise<void>
   executeLoadshow(args: string[]): Promise<void>
+  executeWebshot(args: string[]): Promise<void>
 }
