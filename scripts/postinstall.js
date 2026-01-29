@@ -10,10 +10,10 @@ import { dirname, join } from 'path'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
-const LOADSHOW_VERSION = 'v1.3.0'
+const LOADSHOW_VERSION = 'v1.4.0'
 const LOADSHOW_REPO = 'ideamans/go-loadshow'
 
-const WEBSHOT_VERSION = 'v0.1.0'
+const WEBSHOT_VERSION = 'v0.2.1'
 const WEBSHOT_REPO = 'ideamans/static-webshot'
 
 function getPlatformInfo() {

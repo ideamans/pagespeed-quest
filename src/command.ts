@@ -1,15 +1,15 @@
 #!/usr/bin/env node
 
+import Path from 'path'
+
 import { Command } from 'commander'
 import Watch from 'node-watch'
-
-import Path from 'path'
 
 import { Dependency } from './dependency.js'
 import { execLighthouse } from './lighthouse.js'
 import { execLoadshow } from './loadshow.js'
-import { execWebshotCapture, execWebshotCompare } from './webshot.js'
 import { DeviceType } from './types.js'
+import { execWebshotCapture, execWebshotCompare } from './webshot.js'
 
 import { InventoryRepository, withPlaybackProxy, withRecordingProxy } from './index.js'
 
