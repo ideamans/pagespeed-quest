@@ -10,8 +10,11 @@ import { dirname, join } from 'path'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
-const LOADSHOW_VERSION = 'v1.3.0'
-const REPO = 'ideamans/go-loadshow'
+const LOADSHOW_VERSION = 'v1.4.0'
+const LOADSHOW_REPO = 'ideamans/go-loadshow'
+
+const WEBSHOT_VERSION = 'v0.2.1'
+const WEBSHOT_REPO = 'ideamans/static-webshot'
 
 function getPlatformInfo() {
   const platform = process.platform
@@ -52,14 +55,11 @@ async function extractZip(archivePath, destDir) {
   execSync(`unzip -o "${archivePath}" -d "${destDir}"`, { stdio: 'inherit' })
 }
 
-async function main() {
-  const binDir = join(__dirname, '..', 'bin')
-  const platformInfo = getPlatformInfo()
+async function downloadAndInstall({ repo, version, binaryBaseName, binDir, platformInfo }) {
+  const assetName = `${binaryBaseName}_${version}_${platformInfo.os}_${platformInfo.arch}.${platformInfo.ext}`
+  const downloadUrl = `https://github.com/${repo}/releases/download/${version}/${assetName}`
 
-  const assetName = `loadshow_${LOADSHOW_VERSION}_${platformInfo.os}_${platformInfo.arch}.${platformInfo.ext}`
-  const downloadUrl = `https://github.com/${REPO}/releases/download/${LOADSHOW_VERSION}/${assetName}`
-
-  console.log(`Downloading go-loadshow ${LOADSHOW_VERSION} for ${platformInfo.os}/${platformInfo.arch}...`)
+  console.log(`Downloading ${binaryBaseName} ${version} for ${platformInfo.os}/${platformInfo.arch}...`)
   console.log(`URL: ${downloadUrl}`)
 
   // Create bin directory if not exists
@@ -68,7 +68,7 @@ async function main() {
   }
 
   const archivePath = join(binDir, assetName)
-  const binaryName = platformInfo.os === 'windows' ? 'loadshow.exe' : 'loadshow'
+  const binaryName = platformInfo.os === 'windows' ? `${binaryBaseName}.exe` : binaryBaseName
   const binaryPath = join(binDir, binaryName)
 
   // Download archive
@@ -90,10 +90,31 @@ async function main() {
   // Clean up archive
   unlinkSync(archivePath)
 
-  console.log(`go-loadshow installed successfully at ${binaryPath}`)
+  console.log(`${binaryBaseName} installed successfully at ${binaryPath}`)
+}
+
+async function main() {
+  const binDir = join(__dirname, '..', 'bin')
+  const platformInfo = getPlatformInfo()
+
+  await downloadAndInstall({
+    repo: LOADSHOW_REPO,
+    version: LOADSHOW_VERSION,
+    binaryBaseName: 'loadshow',
+    binDir,
+    platformInfo,
+  })
+
+  await downloadAndInstall({
+    repo: WEBSHOT_REPO,
+    version: WEBSHOT_VERSION,
+    binaryBaseName: 'static-webshot',
+    binDir,
+    platformInfo,
+  })
 }
 
 main().catch((err) => {
-  console.error('Failed to install go-loadshow:', err.message)
+  console.error('Failed to install binaries:', err.message)
   process.exit(1)
 })

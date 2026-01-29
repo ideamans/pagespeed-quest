@@ -1,6 +1,6 @@
 {
   "name": "pagespeed-quest",
-  "version": "0.7.3",
+  "version": "0.8.0",
   "type": "module",
   "description": "A framework for efficient web front-end speed improvement",
   "main": "build/index.js",

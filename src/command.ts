@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+import Path from 'path'
+
 import { Command } from 'commander'
 import Watch from 'node-watch'
 
@@ -7,6 +9,7 @@ import { Dependency } from './dependency.js'
 import { execLighthouse } from './lighthouse.js'
 import { execLoadshow } from './loadshow.js'
 import { DeviceType } from './types.js'
+import { execWebshotCapture, execWebshotCompare } from './webshot.js'
 
 import { InventoryRepository, withPlaybackProxy, withRecordingProxy } from './index.js'
 
@@ -197,8 +200,72 @@ function registerProxyCommands(main: Command) {
   })
 }
 
+function registerCaptureCommands(main: Command) {
+  const visualTest = main.command('capture')
+  visualTest.description('Capture a screenshot via playback proxy and optionally compare with a baseline')
+  visualTest.option('-a, --artifacts <dir>', 'Artifacts directory', './artifacts')
+  visualTest.option('-t, --timeout <ms>', 'Timeout milliseconds', '30000')
+  visualTest.option('--compare <file>', 'Baseline PNG file to compare against')
+  visualTest.option('--baseline-label <label>', 'Label for the baseline image', '前回')
+  visualTest.option('--current-label <label>', 'Label for the current image', '今回')
+
+  visualTest.action(async () => {
+    const inventoryRepository = new InventoryRepository(main.opts().inventory || './inventory')
+    const artifactsDir = visualTest.opts().artifacts || './artifacts'
+    const timeout = Number(visualTest.opts().timeout || '30000')
+    const compareFile = visualTest.opts().compare as string | undefined
+    const baselineLabel = visualTest.opts().baselineLabel || '前回'
+    const currentLabel = visualTest.opts().currentLabel || '今回'
+
+    await withPlaybackProxy(
+      {
+        inventoryRepository,
+        fullThrottle: true,
+      },
+      dependency,
+      async (proxy) => {
+        const outputPath = Path.join(artifactsDir, 'capture.png')
+
+        await dependency.mkdirp(artifactsDir)
+
+        await execWebshotCapture(
+          {
+            url: proxy.entryUrl,
+            proxyPort: proxy.port,
+            preset: proxy.deviceType === 'desktop' ? 'desktop' : 'mobile',
+            output: outputPath,
+            timeout,
+          },
+          dependency
+        )
+        dependency.logger?.info(`Screenshot saved to ${outputPath}`)
+
+        if (compareFile) {
+          const diffOutput = Path.join(artifactsDir, 'capture-diff.png')
+          const digestTxt = Path.join(artifactsDir, 'capture-diff.txt')
+
+          await execWebshotCompare(
+            {
+              baseline: compareFile,
+              current: outputPath,
+              output: diffOutput,
+              digestTxt,
+              baselineLabel,
+              currentLabel,
+            },
+            dependency
+          )
+          dependency.logger?.info(`Diff image saved to ${diffOutput}`)
+          dependency.logger?.info(`Diff digest saved to ${digestTxt}`)
+        }
+      }
+    )
+  })
+}
+
 registerLighthouseCommands(main)
 registerLoadshowCommands(main)
 registerProxyCommands(main)
+registerCaptureCommands(main)
 
 main.parse(process.argv)
