@@ -36,4 +36,10 @@ export class Dependency implements DependencyInterface {
     const loadshowPath = process.env.LOADSHOW_PATH || `./bin/${binaryName}`
     await execa(loadshowPath, args, { stdout: 'inherit', stderr: 'inherit' })
   }
+
+  async executeWebshot(args: string[]): Promise<void> {
+    const binaryName = process.platform === 'win32' ? 'static-webshot.exe' : 'static-webshot'
+    const webshotPath = process.env.WEBSHOT_PATH || `./bin/${binaryName}`
+    await execa(webshotPath, args, { stdout: 'inherit', stderr: 'inherit' })
+  }
 }

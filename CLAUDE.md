@@ -65,7 +65,9 @@ The codebase follows a modular architecture with clear separation of concerns:
 3. **Performance Tools Integration**:
    - **Lighthouse** (`lighthouse.ts`): Runs Google Lighthouse through the proxy
    - **Loadshow** (`loadshow.ts`): Creates videos of page load process
-   - Both tools can work in recording or playback mode
+   - **Webshot** (`webshot.ts`): Captures screenshots and generates visual diffs via `static-webshot`
+   - Lighthouse and Loadshow can work in recording or playback mode
+   - Capture (webshot) works in playback mode only with full-throttle (no timing simulation)
    - Lighthouse throttling is disabled as timing is handled by the Rust proxy
 
 4. **Dependency Injection** (`dependency.ts`):
@@ -73,9 +75,10 @@ The codebase follows a modular architecture with clear separation of concerns:
    - Allows easy mocking and testing
 
 ### CLI Command Structure
-The `psq` command has three main subcommands:
+The `psq` command has four main subcommands:
 - `lighthouse [recording|playback]` - Performance testing with Lighthouse
 - `loadshow [recording|playback]` - Video generation with loadshow
+- `capture` - Screenshot capture via playback proxy (full-throttle) with optional visual diff (`--compare <file>`)
 - `proxy` - Standalone proxy server with optional recording mode (`--record <url>`) and file watching in playback mode
 
 ### Testing Strategy
