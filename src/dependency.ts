@@ -1,9 +1,15 @@
 import Fsp from 'fs/promises'
+import Path from 'path'
+import { fileURLToPath } from 'url'
 
 import { execa } from 'execa'
 import Pino from 'pino'
 
 import { DependencyInterface } from './types.js'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = Path.dirname(__filename)
+const packageBinDir = Path.resolve(__dirname, '..', 'bin')
 
 export class Dependency implements DependencyInterface {
   logger?: Pino.Logger
@@ -33,13 +39,13 @@ export class Dependency implements DependencyInterface {
 
   async executeLoadshow(args: string[]): Promise<void> {
     const binaryName = process.platform === 'win32' ? 'loadshow.exe' : 'loadshow'
-    const loadshowPath = process.env.LOADSHOW_PATH || `./bin/${binaryName}`
+    const loadshowPath = process.env.LOADSHOW_PATH || Path.join(packageBinDir, binaryName)
     await execa(loadshowPath, args, { stdout: 'inherit', stderr: 'inherit' })
   }
 
   async executeWebshot(args: string[]): Promise<void> {
     const binaryName = process.platform === 'win32' ? 'static-webshot.exe' : 'static-webshot'
-    const webshotPath = process.env.WEBSHOT_PATH || `./bin/${binaryName}`
+    const webshotPath = process.env.WEBSHOT_PATH || Path.join(packageBinDir, binaryName)
     await execa(webshotPath, args, { stdout: 'inherit', stderr: 'inherit' })
   }
 }
