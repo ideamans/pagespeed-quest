@@ -22,7 +22,7 @@ function registerLighthouseCommands(main: Command) {
   const lighthouse = main.command('lighthouse')
   lighthouse.description('Run Lighthouse (performance category) via a proxy')
   lighthouse.option('-a, --artifacts <dir>', 'Artifacts directory', './artifacts')
-  lighthouse.option('-q, --quiet', 'Run headless', false)
+  lighthouse.option('-l, --laud', 'Show browser and open the report after completion', false)
   lighthouse.option('-t, --timeout <ms>', 'Timeout milliseconds', '30000')
 
   const recording = lighthouse.command('recording')
@@ -33,7 +33,7 @@ function registerLighthouseCommands(main: Command) {
     const inventoryRepository = new InventoryRepository(main.opts().inventory || './inventory')
     const deviceType: DeviceType = recording.opts().device || 'mobile'
     const artifactsDir = lighthouse.opts().artifacts || './artifacts'
-    const quiet = !!lighthouse.opts().quiet
+    const laud = !!lighthouse.opts().laud
     const timeout = Number(lighthouse.opts().timeout || '30000')
 
     await withRecordingProxy(
@@ -49,9 +49,9 @@ function registerLighthouseCommands(main: Command) {
             url,
             proxyPort: proxy.port,
             deviceType,
-            view: false,
+            view: laud,
             artifactsDir,
-            headless: quiet,
+            headless: !laud,
             timeout,
           },
           dependency
@@ -67,7 +67,7 @@ function registerLighthouseCommands(main: Command) {
     const inventoryDir = main.opts().inventory || './inventory'
     const inventoryRepository = new InventoryRepository(inventoryDir)
     const artifactsDir = lighthouse.opts().artifacts || './artifacts'
-    const quiet = !!lighthouse.opts().quiet
+    const laud = !!lighthouse.opts().laud
     const timeout = Number(lighthouse.opts().timeout || '30000')
 
     // Load inventory for traffic statistics
@@ -84,9 +84,9 @@ function registerLighthouseCommands(main: Command) {
             url: proxy.entryUrl,
             proxyPort: proxy.port,
             deviceType: proxy.deviceType,
-            view: !quiet,
+            view: laud,
             artifactsDir,
-            headless: quiet,
+            headless: !laud,
             timeout,
             inventoryDir,
             resources: inventory.resources,
