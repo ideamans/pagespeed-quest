@@ -26,6 +26,8 @@ export async function execWebshotCapture(
   args.push('--proxy', `http://localhost:${input.proxyPort}`)
   args.push('--ignore-tls-errors')
   args.push('--preset', input.preset || 'mobile')
+  args.push('--viewport', '400x1600')
+  args.push('--resize', '200x800')
   args.push('--timeout', String(Math.ceil(input.timeout / 1000)))
   args.push('-o', input.output)
   args.push(input.url)

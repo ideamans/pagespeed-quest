@@ -12,7 +12,7 @@ PageSpeed Questを利用すると、事前にアイデアの仮説検証を速�
 
 Web APIのモックツールである[VCR](https://github.com/vcr/vcr)をご存知の方は、それをWebページに拡張したものと解釈いただくとわかりやすいです。
 
-[Lighthouse](https://developer.chrome.com/docs/lighthouse/overview/)をPageSpeed Questが提供するHTTPプロキシ経由で実行します。このHTTPプロキシは、WebサーバーとLighthouseを中継するのと同時に、Webページのリソースを静的ページのようなファイル群に変換して「録画」します。
+[Lighthouse](https://developer.chrome.com/docs/lighthouse/overview/)をPageSpeed Questが提供するHTTPプロキシ経由で実行します。このHTTPプロキシは、WebサーバーとLighthouseを中継するのと同時に、Webページのリソースを静的ページのようなファイル群に変換して「録画」します。プロキシは高性能なRustベースのネイティブモジュール[rust-http-playback-proxy](https://github.com/ideamans/rust-http-playback-proxy)を使用しています。
 
 ![Recording](./docs/recording.png)
 
@@ -42,13 +42,13 @@ yarn add pagespeed-quest -D
 次のコマンドでLighthouseを実行し、計測に必要なファイルを記録します。URLは変更してください。
 
 ```sh
-yarn psq lighthouse recording https://exmaple.com/
+yarn psq lighthouse recording https://example.com/
 ```
 
 `inventory`ディレクトリにファイルが作成されます。
 
 - `inventory/index.json` リソース一覧とメタデータ
-- `inventory/[method]/[protocol]/[hostname]/[...path]` 各リソースの内容
+- `inventory/contents/[method]/[protocol]/[hostname]/[...path]` 各リソースの内容
 
 これらのファイルを改変すると、次に解説する再生操作でLighthouseが受信するリソースやメタデータ、転送スピードを改変できます。
 
@@ -64,7 +64,7 @@ yarn psq lighthouse playback
 
 ### loadshowによる読み込み過程の動画の作成
 
-次の`loadshow`サブコマンドを使うと、[loadshow](https://github.com/ideamans/loadshow)を用い、再生したWebページの読み込み過程を動画として出力できます。
+次の`loadshow`サブコマンドを使うと、[loadshow](https://github.com/ideamans/go-loadshow)を用い、再生したWebページの読み込み過程を動画として出力できます。
 
 ```sh
 yarn psq loadshow playback
@@ -75,7 +75,7 @@ yarn psq loadshow playback
 また、Webページの記録においてもloadshowを利用できます。
 
 ```sh
-yarn psq loadshow recording https://exmaple.com/
+yarn psq loadshow recording https://example.com/
 ```
 
 Lighthouseとloadshowでは、Webページの読み込みに関するブラウザの挙動が少し違います。
@@ -84,7 +84,7 @@ Lighthouseとloadshowでは、Webページの読み込みに関するブラウ�
 
 ### スクリーンショットの撮影とビジュアル比較
 
-`capture`サブコマンドを使うと、再生ページのスクリーンショットを撮影できます。再生プロキシをフルスロットルモード（タイミング制御なし）で起動し、[static-webshot](https://github.com/nicepkg/static-webshot)でスクリーンショットを取得します。
+`capture`サブコマンドを使うと、再生ページのスクリーンショットを撮影できます。再生プロキシをフルスロットルモード（タイミング制御なし）で起動し、[static-webshot](https://github.com/ideamans/static-webshot)でスクリーンショットを取得します。スクリーンショットは400x1600のビューポートで描画し、200x800にリサイズされます。
 
 ```sh
 yarn psq capture
@@ -104,17 +104,33 @@ yarn psq capture --compare baseline.png
 yarn psq capture --compare baseline.png --baseline-label "変更前" --current-label "変更後"
 ```
 
-## 再生プロキシの起動
+## プロキシの起動
 
-次のコマンドでWebページを再生するプロキシのみを起動できます。
+### 再生モード
+
+次のコマンドでWebページを再生するプロキシを起動できます。
 
 ```sh
 yarn psq proxy -p 8080
 ```
 
+プロキシはinventoryディレクトリの変更を監視し、ファイルが更新されると自動的に再起動します。
+
+### 録画モード
+
+`--record`オプションでURLを指定すると、録画モードでプロキシを起動できます。
+
+```sh
+yarn psq proxy -p 8080 --record https://example.com/
+```
+
+`Ctrl+C`で録画を停止し、inventoryを保存します。
+
+### ブラウザでの利用
+
 通常のブラウザのHTTPプロキシに`http://localhost:8080`を設定することで、開発者ツールでパフォーマンスタイムラインを詳しく観察できます。
 
-ただし、このHTTPプロキシはダミーのSSL証明書を用いるため、ブラウザのSSL証明書エラーチェックは無効にしてください。たとえばMacOSであれば、次のコマンドでSSL証明書のエラーチェックを無効としてHTTPプロキシを`http://localhost:8080`としたChromeを起動できます。
+ただし、このHTTPプロキシはダミーのSSL証明書を用いるため、ブラウザのSSL証明書エラーチェックは無効にしてください。たとえばmacOSであれば、次のコマンドでSSL証明書のエラーチェックを無効としてHTTPプロキシを`http://localhost:8080`としたChromeを起動できます。
 
 ```sh
 /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --ignore-certificate-errors --proxy-server=http://localhost:8080
@@ -122,7 +138,7 @@ yarn psq proxy -p 8080
 
 ## 開発環境の共有やトレーニングにも
 
-PageSpeed Questは、Webアプリケーションのリリースを必要としないスピーディーな仮説検証意外にも有用です。
+PageSpeed Questは、Webアプリケーションのリリースを必要としないスピーディーな仮説検証以外にも有用です。
 
 - `第三者の協力` 第三者の協力を得るとき、開発環境の共有が難しい場合があります。Webフロントエンドの仮想的な開発環境を容易に共有できます。
 - `トレーニング` 自身のサイトに限らず、あらゆるWebページを題材にWebフロントエンドのスピード改善をトレーニングできます。

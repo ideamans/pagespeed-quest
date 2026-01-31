@@ -12,7 +12,7 @@ By utilizing PageSpeed Quest, you can rapidly iterate on the hypothesis testing 
 
 Those who are familiar with the Web API mocking tool [VCR](https://github.com/vcr/vcr) can understand it as an extension of that tool for web pages.
 
-[Lighthouse](https://developer.chrome.com/docs/lighthouse/overview/) is executed via an HTTP proxy provided by PageSpeed Quest. This HTTP proxy not only relays between the web server and Lighthouse but also "records" web page resources by converting them into a set of files like static pages.
+[Lighthouse](https://developer.chrome.com/docs/lighthouse/overview/) is executed via an HTTP proxy provided by PageSpeed Quest. This HTTP proxy not only relays between the web server and Lighthouse but also "records" web page resources by converting them into a set of files like static pages. The proxy is powered by [rust-http-playback-proxy](https://github.com/ideamans/rust-http-playback-proxy), a high-performance Rust-based native module.
 
 ![Recording](./docs/recording.png)
 
@@ -48,7 +48,7 @@ yarn psq lighthouse recording https://example.com/
 Files are created in the `inventory` directory.
 
 - `inventory/index.json` List of resources and metadata
-- `inventory/[method]/[protocol]/[hostname]/[...path]` Content of each resource
+- `inventory/contents/[method]/[protocol]/[hostname]/[...path]` Content of each resource
 
 By modifying these files, you can change the resources, metadata, and transfer speed that Lighthouse receives in the playback operation explained next.
 
@@ -64,18 +64,18 @@ A report page is automatically displayed. Report files and the like are created 
 
 ### Creating a video of the loading process with loadshow
 
-By using the following `loadshow` subcommand, you can output the playback process of a loaded web page as a video using loadshow.
+By using the following `loadshow` subcommand, you can output the playback process of a loaded web page as a video using [loadshow](https://github.com/ideamans/go-loadshow).
 
 ```sh
 yarn psq loadshow playback
 ```
 
-The video will be output as artifacts/loadshow.mp4.
+The video will be output as `artifacts/loadshow.mp4`.
 
 You can also use loadshow to record the loading of a web page.
 
 ```sh
-yarn psq loadshow recording <https://example.com/>
+yarn psq loadshow recording https://example.com/
 ```
 
 Lighthouse and loadshow behave slightly differently when it comes to how the browser handles web page loading.
@@ -84,7 +84,7 @@ If the main goal is to check speed improvements through video, it is recommended
 
 ### Capturing a screenshot and visual comparison
 
-You can capture a screenshot of the playback page using the `capture` subcommand. This launches the playback proxy in full-throttle mode (no timing simulation) and takes a screenshot with [static-webshot](https://github.com/nicepkg/static-webshot).
+You can capture a screenshot of the playback page using the `capture` subcommand. This launches the playback proxy in full-throttle mode (no timing simulation) and takes a screenshot with [static-webshot](https://github.com/ideamans/static-webshot). The screenshot is rendered at 400x1600 viewport and resized to 200x800.
 
 ```sh
 yarn psq capture
@@ -104,17 +104,33 @@ This generates a diff image at `artifacts/capture-diff.png` and a summary at `ar
 yarn psq capture --compare baseline.png --baseline-label "Before" --current-label "After"
 ```
 
-## Launching the playback proxy
+## Launching the proxy
 
-You can launch only the proxy that plays back the web page with the following command.
+You can launch the proxy with the following command.
+
+### Playback mode
 
 ```sh
 yarn psq proxy -p 8080
 ```
 
+The proxy watches the inventory directory for changes and automatically restarts when files are modified.
+
+### Recording mode
+
+You can also start the proxy in recording mode to capture web page resources:
+
+```sh
+yarn psq proxy -p 8080 --record https://example.com/
+```
+
+Press `Ctrl+C` to stop recording and save the inventory.
+
+### Using the proxy with a browser
+
 By setting the HTTP proxy of a regular browser to `http://localhost:8080`, you can closely observe the performance timeline in developer tools.
 
-However, since this HTTP proxy uses a dummy SSL certificate, please disable the browser's SSL certificate error check. For example, on MacOS, you can launch Chrome with the HTTP proxy set to `http://localhost:8080` and the SSL certificate error check disabled with the following command.
+However, since this HTTP proxy uses a dummy SSL certificate, please disable the browser's SSL certificate error check. For example, on macOS, you can launch Chrome with the HTTP proxy set to `http://localhost:8080` and the SSL certificate error check disabled with the following command.
 
 ```sh
 /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --ignore-certificate-errors --proxy-server=http://localhost:8080
