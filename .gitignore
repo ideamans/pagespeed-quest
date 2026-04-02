@@ -13,3 +13,4 @@ artifacts
 bin
 
 tsconfig.tsbuildinfo
+.DS_Store
