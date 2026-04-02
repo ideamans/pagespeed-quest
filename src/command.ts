@@ -15,6 +15,10 @@ import { InventoryRepository, withPlaybackProxy, withRecordingProxy } from './in
 
 const dependency = new Dependency()
 
+function collect(value: string, previous: string[]): string[] {
+  return previous.concat([value])
+}
+
 const main = new Command()
 main.option('-i, --inventory <dir>', 'Inventory directory', './inventory')
 
@@ -28,6 +32,7 @@ function registerLighthouseCommands(main: Command) {
   const recording = lighthouse.command('recording')
   recording.description('Record contents by lighthouse')
   recording.option('-d, --device <mobile|desktop>', 'Device type', 'mobile')
+  recording.option('-x, --exclude <pattern>', 'Regex patterns to exclude URLs from recording (repeatable)', collect, [])
   recording.argument('<url>', 'Url to measure performance')
   recording.action(async (url: string) => {
     const inventoryRepository = new InventoryRepository(main.opts().inventory || './inventory')
@@ -35,12 +40,14 @@ function registerLighthouseCommands(main: Command) {
     const artifactsDir = lighthouse.opts().artifacts || './artifacts'
     const laud = !!lighthouse.opts().laud
     const timeout = Number(lighthouse.opts().timeout || '30000')
+    const excludePatterns: string[] = recording.opts().exclude || []
 
     await withRecordingProxy(
       {
         entryUrl: url,
         deviceType,
         inventoryRepository,
+        excludePatterns: excludePatterns.length > 0 ? excludePatterns : undefined,
       },
       dependency,
       async (proxy) => {
@@ -109,6 +116,7 @@ function registerLoadshowCommands(main: Command) {
   const recording = loadshow.command('recording')
   recording.description('Record contents by loadshow')
   recording.option('-d, --device <mobile|desktop>', 'Device type', 'mobile')
+  recording.option('-x, --exclude <pattern>', 'Regex patterns to exclude URLs from recording (repeatable)', collect, [])
   recording.argument('<url>', 'Url to measure performance')
   recording.action(async (url: string) => {
     const inventoryRepository = new InventoryRepository(main.opts().inventory || './inventory')
@@ -116,11 +124,21 @@ function registerLoadshowCommands(main: Command) {
     const artifactsDir = loadshow.opts().artifacts || './artifacts'
     const credit = loadshow.opts().credit || ''
     const timeout = Number(loadshow.opts().timeout || '30000')
+    const excludePatterns: string[] = recording.opts().exclude || []
 
-    await withRecordingProxy({ entryUrl: url, deviceType, inventoryRepository }, dependency, async (proxy) => {
-      await execLoadshow({ url, proxyPort: proxy.port, deviceType, artifactsDir, credit, timeout }, dependency)
-      dependency.logger?.info('Loadshow completed. Saving inventory...')
-    })
+    await withRecordingProxy(
+      {
+        entryUrl: url,
+        deviceType,
+        inventoryRepository,
+        excludePatterns: excludePatterns.length > 0 ? excludePatterns : undefined,
+      },
+      dependency,
+      async (proxy) => {
+        await execLoadshow({ url, proxyPort: proxy.port, deviceType, artifactsDir, credit, timeout }, dependency)
+        dependency.logger?.info('Loadshow completed. Saving inventory...')
+      }
+    )
   })
 
   const playback = loadshow.command('playback')
@@ -158,6 +176,7 @@ function registerProxyCommands(main: Command) {
   const proxy = main.command('proxy')
   proxy.option('-p, --port <number>', 'Proxy port', '8080')
   proxy.option('-r, --record <url>', 'Recording URL to start the proxy as recording mode', '')
+  proxy.option('-x, --exclude <pattern>', 'Regex patterns to exclude URLs from recording (repeatable)', collect, [])
 
   proxy.action(async () => {
     const inventoryRepository = new InventoryRepository(main.opts().inventory || './inventory')
@@ -169,18 +188,29 @@ function registerProxyCommands(main: Command) {
         throw new Error('Recording URL must be specified with --record option.')
       }
 
-      // Recordingモード
-      await withRecordingProxy({ inventoryRepository, port, entryUrl: url }, dependency, async () => {
-        dependency.logger?.info(`Recording proxy started on port ${port}. Press Ctrl+C to stop.`)
+      const excludePatterns: string[] = proxy.opts().exclude || []
 
-        // Wait for Ctrl+C signal
-        return new Promise<void>((resolve) => {
-          process.on('SIGINT', () => {
-            dependency.logger?.info('Saving the inventory...')
-            resolve()
+      // Recordingモード
+      await withRecordingProxy(
+        {
+          inventoryRepository,
+          port,
+          entryUrl: url,
+          excludePatterns: excludePatterns.length > 0 ? excludePatterns : undefined,
+        },
+        dependency,
+        async () => {
+          dependency.logger?.info(`Recording proxy started on port ${port}. Press Ctrl+C to stop.`)
+
+          // Wait for Ctrl+C signal
+          return new Promise<void>((resolve) => {
+            process.on('SIGINT', () => {
+              dependency.logger?.info('Saving the inventory...')
+              resolve()
+            })
           })
-        })
-      })
+        }
+      )
     } else {
       // Playbackモード
       // eslint-disable-next-line no-constant-condition
