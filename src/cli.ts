@@ -1,0 +1,335 @@
+import Path from 'path'
+
+import { Command } from 'commander'
+import Watch from 'node-watch'
+
+import { Dependency } from './dependency.js'
+import { execLighthouse } from './lighthouse.js'
+import { packageVersion, renderLlmDocs } from './llm.js'
+import { execLoadshow } from './loadshow.js'
+import { DependencyInterface, DeviceType } from './types.js'
+import { execWebshotCapture, execWebshotCompare } from './webshot.js'
+
+import { InventoryRepository, withPlaybackProxy, withRecordingProxy } from './index.js'
+
+/**
+ * The dependency container is created lazily.
+ *
+ * Building it eagerly would spawn the pino-pretty transport worker as a side
+ * effect of importing this module, which breaks tools that only want to walk
+ * the command tree (see scripts/build-llm-docs.js).
+ */
+let dependencyInstance: Dependency | undefined
+
+function dependency(): DependencyInterface {
+  if (!dependencyInstance) dependencyInstance = new Dependency()
+  return dependencyInstance
+}
+
+function collect(value: string, previous: string[]): string[] {
+  return previous.concat([value])
+}
+
+function registerLighthouseCommands(main: Command) {
+  const lighthouse = main.command('lighthouse')
+  lighthouse.description('Run Lighthouse (performance category) via a proxy')
+  lighthouse.option('-a, --artifacts <dir>', 'Artifacts directory', './artifacts')
+  lighthouse.option('-l, --laud', 'Show browser and open the report after completion', false)
+  lighthouse.option('-t, --timeout <ms>', 'Timeout milliseconds', '30000')
+
+  const recording = lighthouse.command('recording')
+  recording.description('Record contents by lighthouse')
+  recording.option('-d, --device <mobile|desktop>', 'Device type', 'mobile')
+  recording.option('-x, --exclude <pattern>', 'Regex patterns to exclude URLs from recording (repeatable)', collect, [])
+  recording.argument('<url>', 'Url to measure performance')
+  recording.action(async (url: string) => {
+    const inventoryRepository = new InventoryRepository(main.opts().inventory || './inventory')
+    const deviceType: DeviceType = recording.opts().device || 'mobile'
+    const artifactsDir = lighthouse.opts().artifacts || './artifacts'
+    const laud = !!lighthouse.opts().laud
+    const timeout = Number(lighthouse.opts().timeout || '30000')
+    const excludePatterns: string[] = recording.opts().exclude || []
+
+    await withRecordingProxy(
+      {
+        entryUrl: url,
+        deviceType,
+        inventoryRepository,
+        excludePatterns: excludePatterns.length > 0 ? excludePatterns : undefined,
+      },
+      dependency(),
+      async (proxy) => {
+        await execLighthouse(
+          {
+            url,
+            proxyPort: proxy.port,
+            deviceType,
+            view: laud,
+            artifactsDir,
+            headless: !laud,
+            timeout,
+          },
+          dependency()
+        )
+        dependency().logger?.info('Lighthouse completed. Saving inventory...')
+      }
+    )
+  })
+
+  const playback = lighthouse.command('playback')
+  playback.description('Playback contents for lighthouse')
+  playback.action(async () => {
+    const inventoryDir = main.opts().inventory || './inventory'
+    const inventoryRepository = new InventoryRepository(inventoryDir)
+    const artifactsDir = lighthouse.opts().artifacts || './artifacts'
+    const laud = !!lighthouse.opts().laud
+    const timeout = Number(lighthouse.opts().timeout || '30000')
+
+    // Load inventory for traffic statistics
+    const inventory = await inventoryRepository.loadInventory()
+
+    await withPlaybackProxy(
+      {
+        inventoryRepository,
+      },
+      dependency(),
+      async (proxy) => {
+        await execLighthouse(
+          {
+            url: proxy.entryUrl,
+            proxyPort: proxy.port,
+            deviceType: proxy.deviceType,
+            view: laud,
+            artifactsDir,
+            headless: !laud,
+            timeout,
+            inventoryDir,
+            resources: inventory.resources,
+          },
+          dependency()
+        )
+        dependency().logger?.info('Lighthouse completed')
+      }
+    )
+  })
+}
+
+function registerLoadshowCommands(main: Command) {
+  const loadshow = main.command('loadshow')
+  loadshow.description('Run loadshow via a proxy')
+  loadshow.option('-a, --artifacts <dir>', 'Artifacts directory', './artifacts')
+  loadshow.option('-c, --credit <string>', 'Credit string')
+  loadshow.option('-t, --timeout <ms>', 'Timeout milliseconds', '30000')
+
+  const recording = loadshow.command('recording')
+  recording.description('Record contents by loadshow')
+  recording.option('-d, --device <mobile|desktop>', 'Device type', 'mobile')
+  recording.option('-x, --exclude <pattern>', 'Regex patterns to exclude URLs from recording (repeatable)', collect, [])
+  recording.argument('<url>', 'Url to measure performance')
+  recording.action(async (url: string) => {
+    const inventoryRepository = new InventoryRepository(main.opts().inventory || './inventory')
+    const deviceType: DeviceType = recording.opts().device || 'mobile'
+    const artifactsDir = loadshow.opts().artifacts || './artifacts'
+    const credit = loadshow.opts().credit || ''
+    const timeout = Number(loadshow.opts().timeout || '30000')
+    const excludePatterns: string[] = recording.opts().exclude || []
+
+    await withRecordingProxy(
+      {
+        entryUrl: url,
+        deviceType,
+        inventoryRepository,
+        excludePatterns: excludePatterns.length > 0 ? excludePatterns : undefined,
+      },
+      dependency(),
+      async (proxy) => {
+        await execLoadshow({ url, proxyPort: proxy.port, deviceType, artifactsDir, credit, timeout }, dependency())
+        dependency().logger?.info('Loadshow completed. Saving inventory...')
+      }
+    )
+  })
+
+  const playback = loadshow.command('playback')
+  playback.description('Playback contents for loadshow')
+  playback.action(async () => {
+    const inventoryRepository = new InventoryRepository(main.opts().inventory || './inventory')
+    const artifactsDir = loadshow.opts().artifacts || './artifacts'
+    const credit = loadshow.opts().credit || ''
+    const timeout = Number(loadshow.opts().timeout || '30000')
+
+    await withPlaybackProxy(
+      {
+        inventoryRepository,
+      },
+      dependency(),
+      async (proxy) => {
+        await execLoadshow(
+          {
+            url: proxy.entryUrl,
+            proxyPort: proxy.port,
+            deviceType: proxy.deviceType,
+            artifactsDir,
+            credit,
+            timeout,
+          },
+          dependency()
+        )
+        dependency().logger?.info('Loadshow completed')
+      }
+    )
+  })
+}
+
+function registerProxyCommands(main: Command) {
+  const proxy = main.command('proxy')
+  proxy.description('Run the playback (or recording) proxy standalone')
+  proxy.option('-p, --port <number>', 'Proxy port', '8080')
+  proxy.option('-r, --record <url>', 'Recording URL to start the proxy as recording mode', '')
+  proxy.option('-x, --exclude <pattern>', 'Regex patterns to exclude URLs from recording (repeatable)', collect, [])
+
+  proxy.action(async () => {
+    const inventoryRepository = new InventoryRepository(main.opts().inventory || './inventory')
+    const port = Number(proxy.opts().port || '8080')
+
+    if (proxy.opts().record) {
+      const url = proxy.opts().record
+      if (!url) {
+        throw new Error('Recording URL must be specified with --record option.')
+      }
+
+      const excludePatterns: string[] = proxy.opts().exclude || []
+
+      // Recordingモード
+      await withRecordingProxy(
+        {
+          inventoryRepository,
+          port,
+          entryUrl: url,
+          excludePatterns: excludePatterns.length > 0 ? excludePatterns : undefined,
+        },
+        dependency(),
+        async () => {
+          dependency().logger?.info(`Recording proxy started on port ${port}. Press Ctrl+C to stop.`)
+
+          // Wait for Ctrl+C signal
+          return new Promise<void>((resolve) => {
+            process.on('SIGINT', () => {
+              dependency().logger?.info('Saving the inventory...')
+              resolve()
+            })
+          })
+        }
+      )
+    } else {
+      // Playbackモード
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        await withPlaybackProxy({ inventoryRepository, port }, dependency(), async () => {
+          const watcher = Watch(inventoryRepository.dirPath, { recursive: true })
+          return new Promise((ok) => {
+            watcher.on('change', () => {
+              watcher.close()
+              dependency().logger?.info('Inventory changed. Restarting proxy...')
+              ok()
+            })
+          })
+        })
+      }
+    }
+  })
+}
+
+function registerCaptureCommands(main: Command) {
+  const visualTest = main.command('capture')
+  visualTest.description('Capture a screenshot via playback proxy and optionally compare with a baseline')
+  visualTest.option('-a, --artifacts <dir>', 'Artifacts directory', './artifacts')
+  visualTest.option('-t, --timeout <ms>', 'Timeout milliseconds', '30000')
+  visualTest.option('--compare <file>', 'Baseline PNG file to compare against')
+  visualTest.option('--baseline-label <label>', 'Label for the baseline image', '前回')
+  visualTest.option('--current-label <label>', 'Label for the current image', '今回')
+
+  visualTest.action(async () => {
+    const inventoryRepository = new InventoryRepository(main.opts().inventory || './inventory')
+    const artifactsDir = visualTest.opts().artifacts || './artifacts'
+    const timeout = Number(visualTest.opts().timeout || '30000')
+    const compareFile = visualTest.opts().compare as string | undefined
+    const baselineLabel = visualTest.opts().baselineLabel || '前回'
+    const currentLabel = visualTest.opts().currentLabel || '今回'
+
+    await withPlaybackProxy(
+      {
+        inventoryRepository,
+        fullThrottle: true,
+      },
+      dependency(),
+      async (proxy) => {
+        const outputPath = Path.join(artifactsDir, 'capture.png')
+
+        await dependency().mkdirp(artifactsDir)
+
+        await execWebshotCapture(
+          {
+            url: proxy.entryUrl,
+            proxyPort: proxy.port,
+            preset: proxy.deviceType === 'desktop' ? 'desktop' : 'mobile',
+            output: outputPath,
+            timeout,
+          },
+          dependency()
+        )
+        dependency().logger?.info(`Screenshot saved to ${outputPath}`)
+
+        if (compareFile) {
+          const diffOutput = Path.join(artifactsDir, 'capture-diff.png')
+          const digestTxt = Path.join(artifactsDir, 'capture-diff.txt')
+
+          await execWebshotCompare(
+            {
+              baseline: compareFile,
+              current: outputPath,
+              output: diffOutput,
+              digestTxt,
+              baselineLabel,
+              currentLabel,
+            },
+            dependency()
+          )
+          dependency().logger?.info(`Diff image saved to ${diffOutput}`)
+          dependency().logger?.info(`Diff digest saved to ${digestTxt}`)
+        }
+      }
+    )
+  })
+}
+
+function registerLlmCommands(main: Command) {
+  const llm = main.command('llm')
+  llm.description('Print the embedded reference for AI agents')
+  llm.option('-f, --format <markdown|json>', 'Output format', 'markdown')
+  llm.action(async () => {
+    const format = llm.opts().format === 'json' ? 'json' : 'markdown'
+    process.stdout.write(await renderLlmDocs(format))
+  })
+}
+
+/**
+ * Build the `psq` command tree.
+ *
+ * Exported so that scripts/build-llm-docs.js can walk it to generate the
+ * command catalog (llmdocs/90-commands.md) instead of hand-maintaining it.
+ */
+export function createProgram(): Command {
+  const main = new Command()
+  main.name('psq')
+  main.version(packageVersion(), '-v, --version', 'Output the version number')
+  main.description('Record a web page through a proxy, edit the recording, and replay it to measure the difference')
+  main.option('-i, --inventory <dir>', 'Inventory directory', './inventory')
+
+  registerLighthouseCommands(main)
+  registerLoadshowCommands(main)
+  registerProxyCommands(main)
+  registerCaptureCommands(main)
+  registerLlmCommands(main)
+
+  return main
+}

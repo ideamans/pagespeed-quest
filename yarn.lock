@@ -2,13 +2,13 @@
 # yarn lockfile v1
 
 
-"@ava/typescript@^5.0.0":
-  version "5.0.0"
-  resolved "https://registry.npmjs.org/@ava/typescript/-/typescript-5.0.0.tgz"
-  integrity sha512-2twsQz2fUd95QK1MtKuEnjkiN47SKHZfi/vWj040EN6Eo2ZW3SNcAwncJqXXoMTYZTWtBRXYp3Fg8z+JkFI9aQ==
+"@ava/typescript@^7.0.0":
+  version "7.0.0"
+  resolved "https://registry.yarnpkg.com/@ava/typescript/-/typescript-7.0.0.tgz#f5399c83de92786e64b006dd9db28331292fbbec"
+  integrity sha512-0ktzq4/9ya2QoAuVWzl3McpLV9W//Tj+oMonQ4ucgm5l6tQ46aaju/rJL9kzeY5MkG6wzXvFt/MmaLqf9uNC9w==
   dependencies:
     escape-string-regexp "^5.0.0"
-    execa "^8.0.1"
+    execa "^9.6.1"
 
 "@babel/code-frame@7.12.11", "@babel/code-frame@^7.0.0":
   version "7.12.11"
@@ -3167,22 +3167,7 @@ events@^3.3.0:
   resolved "https://registry.npmjs.org/events/-/events-3.3.0.tgz"
   integrity sha512-mQw+2fkQbALzQ7V0MY0IqdnXNOeTtP4r0lN9z7AAawCXgqea7bDii20AYrIBrFd/Hx0M2Ocz6S111CaFkUcb0Q==
 
-execa@^8.0.1:
-  version "8.0.1"
-  resolved "https://registry.npmjs.org/execa/-/execa-8.0.1.tgz"
-  integrity sha512-VyhnebXciFV2DESc+p6B+y0LjSm0krU4OgJN44qFAhBY0TJ+1V61tYD2+wHusZ6F9n5K+vl8k0sTy7PEfV4qpg==
-  dependencies:
-    cross-spawn "^7.0.3"
-    get-stream "^8.0.1"
-    human-signals "^5.0.0"
-    is-stream "^3.0.0"
-    merge-stream "^2.0.0"
-    npm-run-path "^5.1.0"
-    onetime "^6.0.0"
-    signal-exit "^4.1.0"
-    strip-final-newline "^3.0.0"
-
-execa@^9.3.1:
+execa@^9.3.1, execa@^9.6.1:
   version "9.6.1"
   resolved "https://registry.npmjs.org/execa/-/execa-9.6.1.tgz"
   integrity sha512-9Be3ZoN4LmYR90tUoVu2te2BsbzHfhJyfEiAVfz7N5/zv+jduIfLrV2xdQXOHbaD6KgpGdO9PRPM1Y4Q9QkPkA==
@@ -3623,11 +3608,6 @@ get-stream@^5.1.0:
   dependencies:
     pump "^3.0.0"
 
-get-stream@^8.0.1:
-  version "8.0.1"
-  resolved "https://registry.npmjs.org/get-stream/-/get-stream-8.0.1.tgz"
-  integrity sha512-VaUJspBffn/LMCJVoMvSAdmscJyS1auj5Zulnn5UoYcY531UWmdwhRWkcGKnGU93m5HSXP9LP2usOryrBtQowA==
-
 get-stream@^9.0.0:
   version "9.0.1"
   resolved "https://registry.npmjs.org/get-stream/-/get-stream-9.0.1.tgz"
@@ -3970,11 +3950,6 @@ https-proxy-agent@^7.0.5, https-proxy-agent@^7.0.6:
   dependencies:
     agent-base "^7.1.2"
     debug "4"
-
-human-signals@^5.0.0:
-  version "5.0.0"
-  resolved "https://registry.npmjs.org/human-signals/-/human-signals-5.0.0.tgz"
-  integrity sha512-AXcZb6vzzrFAUE61HnN4mpLqd/cSIwNQjtNWR0euPm6y0iqx3G4gOXaIDdtdDwZmhwe82LA6+zinmW4UBWVePQ==
 
 human-signals@^8.0.1:
   version "8.0.1"
@@ -4341,11 +4316,6 @@ is-stream@^2.0.0:
   version "2.0.1"
   resolved "https://registry.npmjs.org/is-stream/-/is-stream-2.0.1.tgz"
   integrity sha512-hFoiJiTl63nn+kstHGBtewWSKnQLpyb155KHheA1l39uvtO9nWIop1p3udqPcUd/xbF1VLMO4n7OI6p7RbngDg==
-
-is-stream@^3.0.0:
-  version "3.0.0"
-  resolved "https://registry.npmjs.org/is-stream/-/is-stream-3.0.0.tgz"
-  integrity sha512-LnQR4bZ9IADDRSkvpqMGvt/tEJWclzklNgSw48V5EAaAeDd6qGvN8ei6k5p0tvxSR171VmGyHuTiAOfxAbr8kA==
 
 is-stream@^4.0.1:
   version "4.0.1"
@@ -4972,11 +4942,6 @@ meow@^8.0.0:
     type-fest "^0.18.0"
     yargs-parser "^20.2.3"
 
-merge-stream@^2.0.0:
-  version "2.0.0"
-  resolved "https://registry.npmjs.org/merge-stream/-/merge-stream-2.0.0.tgz"
-  integrity sha512-abv/qOcuPfk3URPfDzmZU1LKmuw8kT+0nIHvKrKgFrwifol/doWcdA4ZqsWQ8ENrFKkd67Mfpo/LovbIUsbt3w==
-
 merge2@^1.3.0, merge2@^1.4.1:
   version "1.4.1"
   resolved "https://registry.npmjs.org/merge2/-/merge2-1.4.1.tgz"
@@ -5011,11 +4976,6 @@ mimic-fn@^2.1.0:
   version "2.1.0"
   resolved "https://registry.npmjs.org/mimic-fn/-/mimic-fn-2.1.0.tgz"
   integrity sha512-OqbOk5oEQeAZ8WXWydlu9HJjz9WVdEIvamMCcXmuqUYjTknH/sqsWvhQ3vgwKFRR1HpjvNBKQ37nbJgYzGqGcg==
-
-mimic-fn@^4.0.0:
-  version "4.0.0"
-  resolved "https://registry.npmjs.org/mimic-fn/-/mimic-fn-4.0.0.tgz"
-  integrity sha512-vqiC06CuhBTUdZH+RYl8sFrL096vA45Ok5ISO6sE/Mr1jRbGH4Csnhi8f3wKVl7x8mO4Au7Ir9D3Oyv1VYMFJw==
 
 mimic-function@^5.0.1:
   version "5.0.1"
@@ -5197,13 +5157,6 @@ npm-run-all@^4.1.5:
     shell-quote "^1.6.1"
     string.prototype.padend "^3.0.0"
 
-npm-run-path@^5.1.0:
-  version "5.3.0"
-  resolved "https://registry.npmjs.org/npm-run-path/-/npm-run-path-5.3.0.tgz"
-  integrity sha512-ppwTtiJZq0O/ai0z7yfudtBpWIoxM8yE6nHi1X47eFR2EWORqfbu6CnPlNsjeN683eT0qG6H/Pyf9fCcvjnnnQ==
-  dependencies:
-    path-key "^4.0.0"
-
 npm-run-path@^6.0.0:
   version "6.0.0"
   resolved "https://registry.npmjs.org/npm-run-path/-/npm-run-path-6.0.0.tgz"
@@ -5319,13 +5272,6 @@ onetime@^5.1.0:
   integrity sha512-kbpaSSGJTWdAY5KPVeMOKXSrPtr8C8C7wodJbcsd51jRnmD+GZu8Y0VoU6Dm5Z4vWr0Ig/1NKuWRKf7j5aaYSg==
   dependencies:
     mimic-fn "^2.1.0"
-
-onetime@^6.0.0:
-  version "6.0.0"
-  resolved "https://registry.npmjs.org/onetime/-/onetime-6.0.0.tgz"
-  integrity sha512-1FlR+gjXK7X+AsAHso35MnyN5KqGwJRi/31ft6x0M194ht7S+rWAvd7PHss9xSKMzE0asv1pyIHaJYq+BbacAQ==
-  dependencies:
-    mimic-fn "^4.0.0"
 
 open-cli@^6.0.1:
   version "6.0.1"
@@ -6707,11 +6653,6 @@ strip-bom@^3.0.0:
   version "3.0.0"
   resolved "https://registry.npmjs.org/strip-bom/-/strip-bom-3.0.0.tgz"
   integrity sha512-vavAMRXOgBVNF6nyEEmL3DBK19iRpDcoIwW+swQ+CbGiu7lju6t+JklA1MHweoWtadgt4ISVUsXLyDq34ddcwA==
-
-strip-final-newline@^3.0.0:
-  version "3.0.0"
-  resolved "https://registry.npmjs.org/strip-final-newline/-/strip-final-newline-3.0.0.tgz"
-  integrity sha512-dOESqjYr96iWYylGObzd39EuNTa5VJxyvVAEm5Jnh7KGo75V43Hk1odPQkNDyXNmUR6k+gEiDVXnjB8HJ3crXw==
 
 strip-final-newline@^4.0.0:
   version "4.0.0"

@@ -1,0 +1,22 @@
+{
+  "name": "pagespeed-quest",
+  "description": "Adds /psq-install, /psq-usage, /psq-inventory and /psq-video skills for freezing any web page into an editable local recording, replaying it with the original timing, and measuring front-end speed hypotheses with Lighthouse, video and visual diffs.",
+  "version": "0.11.0",
+  "author": {
+    "name": "Ideamans Inc.",
+    "email": "support@ideamans.com"
+  },
+  "homepage": "https://github.com/ideamans/pagespeed-quest",
+  "repository": "https://github.com/ideamans/pagespeed-quest",
+  "license": "GPL-3.0-or-later",
+  "keywords": [
+    "performance",
+    "lighthouse",
+    "web-vitals",
+    "proxy",
+    "playback",
+    "cli",
+    "llm",
+    "agent"
+  ]
+}

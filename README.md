@@ -136,6 +136,49 @@ However, since this HTTP proxy uses a dummy SSL certificate, please disable the 
 /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --ignore-certificate-errors --proxy-server=http://localhost:8080
 ```
 
+## Driving it with an AI agent
+
+PageSpeed Quest ships its own reference for AI agents. One command prints
+everything an agent needs — the ground rules, the inventory schema, the timing
+model, and a catalogue of which edit models which optimization:
+
+```sh
+yarn psq llm              # Markdown (default)
+yarn psq llm --format json  # one object per chapter
+```
+
+The reference is embedded in the installed package, so it always matches the
+version you are running.
+
+### Claude Code / gh skill
+
+The repository also ships an Agent Skills bundle under
+`plugins/pagespeed-quest/`:
+
+| Skill | What it covers |
+| --- | --- |
+| `psq-install` | setting up a quest project so `psq` runs |
+| `psq-usage` | the record → baseline → edit → measure loop |
+| `psq-inventory` | the file layout and the catalogue of experiments |
+| `psq-video` | before/after videos of the load |
+
+For Claude Code, add the ideamans marketplace and install the plugin:
+
+```sh
+/plugin marketplace add ideamans/claude-public-plugins
+/plugin install pagespeed-quest
+```
+
+For other agents (Copilot, Cursor, Gemini CLI, Codex), the same skills install
+through `gh skill`:
+
+```sh
+gh skill install ideamans/pagespeed-quest/plugins/pagespeed-quest/skills/psq-usage --agent copilot
+```
+
+The project is also registered with [context7](https://context7.com/), so agents
+with the context7 MCP server can look it up without installing anything.
+
 ## For Sharing Development Environments and Training
 
 PageSpeed Quest is useful not only for speedy hypothesis verification without the need for a Web application release but also for other purposes.
