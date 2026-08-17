@@ -18,7 +18,16 @@ const outputPath = join(projectRoot, 'llmdocs', '90-commands.md')
 
 const { createProgram } = await import(join(projectRoot, 'build', 'cli.js'))
 
+/**
+ * Commander wraps help text to the terminal width, which would make the
+ * generated catalog depend on whoever ran the generator. Pin it so the output
+ * is reproducible and `--check` means something.
+ */
+const HELP_WIDTH = 80
+
 function walk(command, path, depth, lines) {
+  command.configureHelp({ helpWidth: HELP_WIDTH })
+
   const heading = '#'.repeat(Math.min(depth + 1, 6))
   const title = [...path, command.name()].join(' ')
 

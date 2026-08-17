@@ -184,4 +184,5 @@ as `package.json`; the validator enforces it. Publishing to npm happens on a
 
 Node **22.19 or newer** — Lighthouse 13's floor, and what `engines.node`
 declares. The test runner (`@ava/typescript` 7) needs 22.20+, so
-`.node-version` and `.tool-versions` pin 22.23.1. CI runs 22.x and 24.x.
+`.node-version` pins 22.23.1 and `.tool-versions` tracks `latest`. CI runs
+22.x and 24.x.
