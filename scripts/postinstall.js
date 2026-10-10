@@ -22,9 +22,6 @@ function getPlatformInfo() {
 
   if (platform === 'darwin' && arch === 'arm64') {
     return { os: 'darwin', arch: 'arm64', ext: 'tar.gz' }
-  } else if (platform === 'darwin' && arch === 'x64') {
-    // macOS x64 is not available, fall back to arm64 (Rosetta 2)
-    return { os: 'darwin', arch: 'arm64', ext: 'tar.gz' }
   } else if (platform === 'linux' && arch === 'x64') {
     return { os: 'linux', arch: 'amd64', ext: 'tar.gz' }
   } else if (platform === 'linux' && arch === 'arm64') {
@@ -32,6 +29,8 @@ function getPlatformInfo() {
   } else if (platform === 'win32' && arch === 'x64') {
     return { os: 'windows', arch: 'amd64', ext: 'zip' }
   } else {
+    // Intel Macs are not supported: none of loadshow, static-webshot or the
+    // playback proxy ship a darwin-x64 build
     throw new Error(`Unsupported platform: ${platform} ${arch}`)
   }
 }
