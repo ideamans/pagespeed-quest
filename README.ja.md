@@ -136,6 +136,53 @@ yarn psq proxy -p 8080 --record https://example.com/
 /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --ignore-certificate-errors --proxy-server=http://localhost:8080
 ```
 
+## AIエージェントから使う
+
+PageSpeed Quest は、AIエージェント向けのリファレンスを自分で持っています。
+鉄則・調査の進め方・インベントリのスキーマ・再生時のタイミングの計算式・
+編集が再生にどう効くか・計測結果の読み方が、1コマンドで全部出ます。
+
+```sh
+yarn psq llm                # Markdown（既定）
+yarn psq llm --format json  # 章ごとのJSON配列
+```
+
+インストールされたパッケージに同梱されているので、**実行中のバージョンと必ず
+一致します**（ドキュメントサイトと違って古くなりません）。
+
+### Claude Code / gh skill
+
+`plugins/pagespeed-quest/` に Agent Skills を同梱しています。
+
+| スキル | 内容 |
+| --- | --- |
+| `psq-usage` | URL の調査を通しで行う。記録 → 計測 → ボトルネック調査 → 1つずつ試す → 効いたものを採用 → 改善幅を報告 |
+| `psq-install` | `psq` が動く状態のプロジェクトを用意する |
+| `psq-record` | ページを記録し、記録を点検し、ベースラインとして凍結する |
+| `psq-measure` | Lighthouse の複数回計測と中央値、レポートからボトルネックを読む、スクリーンショット比較 |
+| `psq-inventory` | 記録への編集が再生にどう効くか |
+| `psq-video` | 読み込み過程のビフォーアフター動画 |
+
+スキルが教えるのはツールの使い方で、Web 高速化の施策ではありません。
+何を改善するかはエージェントの判断に任せています。
+
+Claude Code の場合:
+
+```sh
+/plugin marketplace add ideamans/claude-public-plugins
+/plugin install pagespeed-quest
+```
+
+Copilot / Cursor / Gemini CLI / Codex などは同じ SKILL.md を `gh skill` で
+入れられます。
+
+```sh
+gh skill install ideamans/pagespeed-quest/plugins/pagespeed-quest/skills/psq-usage --agent copilot
+```
+
+[context7](https://context7.com/) にも登録しているので、context7 MCP を繋いだ
+エージェントは何も入れずに参照できます。
+
 ## 開発環境の共有やトレーニングにも
 
 PageSpeed Questは、Webアプリケーションのリリースを必要としないスピーディーな仮説検証以外にも有用です。

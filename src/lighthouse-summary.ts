@@ -13,6 +13,7 @@ export interface LighthouseAudit {
   score: number | null
   numericValue?: number
   displayValue?: string
+  details?: { items?: unknown[] }
 }
 
 /**
@@ -44,8 +45,20 @@ const PERFORMANCE_METRICS = [
 export interface GenerateLighthouseSummaryInput {
   jsonPath: string
   outputPath: string
-  inventoryDir?: string
+  // Present for playback runs only; the Traffic and Resource sections are
+  // written when it is given
   resources?: Resource[]
+}
+
+/**
+ * The fields of a Lighthouse `network-requests` item used here
+ */
+interface NetworkRequestItem {
+  url?: string
+  resourceType?: string
+  mimeType?: string
+  transferSize?: number
+  resourceSize?: number
 }
 
 /**
@@ -59,14 +72,26 @@ type ResourceType = 'document' | 'stylesheet' | 'script' | 'image' | 'font' | 'o
 interface ResourceTypeStats {
   type: ResourceType
   count: number
-  trafficSize: number // Compressed/transferred size
-  resourceSize: number // Decompressed/original size
+  trafficSize: number // Bytes received, including headers
+  resourceSize: number // Decoded body size
 }
 
 /**
- * Maps MIME type to resource type category
+ * Maps a Lighthouse request to a resource type category
  */
-function getResourceType(mime: string | undefined): ResourceType {
+function getResourceType(resourceType: string | undefined, mime: string | undefined): ResourceType {
+  switch (resourceType) {
+    case 'Document':
+      return 'document'
+    case 'Stylesheet':
+      return 'stylesheet'
+    case 'Script':
+      return 'script'
+    case 'Image':
+      return 'image'
+    case 'Font':
+      return 'font'
+  }
   if (!mime) return 'other'
   if (mime.includes('html')) return 'document'
   if (mime.includes('css')) return 'stylesheet'
@@ -87,12 +112,13 @@ function formatBytes(bytes: number): string {
 }
 
 /**
- * Calculates traffic statistics by resource type
+ * Calculates traffic statistics by resource type from what the browser
+ * actually received in this run (Lighthouse's `network-requests` audit)
  */
-async function calculateResourceStats(
-  resources: Resource[],
-  inventoryDir: string
-): Promise<{ stats: ResourceTypeStats[]; totals: { trafficSize: number; resourceSize: number } }> {
+function calculateResourceStats(report: LighthouseReport): {
+  stats: ResourceTypeStats[]
+  totals: { trafficSize: number; resourceSize: number }
+} {
   const statsMap = new Map<ResourceType, ResourceTypeStats>()
 
   // Initialize all resource types
@@ -101,50 +127,21 @@ async function calculateResourceStats(
     statsMap.set(type, { type, count: 0, trafficSize: 0, resourceSize: 0 })
   }
 
-  for (const resource of resources) {
-    if (!resource.contentFilePath) continue
+  const items = (report.audits?.['network-requests']?.details?.items ?? []) as NetworkRequestItem[]
+  for (const item of items) {
+    // data: and blob: URLs never crossed the network
+    if (!item.url || !/^https?:/.test(item.url)) continue
 
-    const type = getResourceType(resource.contentTypeMime)
-    const stat = statsMap.get(type)
+    const stat = statsMap.get(getResourceType(item.resourceType, item.mimeType))
     if (!stat) continue
 
-    try {
-      const filePath = Path.join(inventoryDir, resource.contentFilePath)
-      const fileStat = await fs.stat(filePath)
-      const resourceSize = fileStat.size
-
-      // Traffic size: if content-encoding exists, estimate compressed size
-      // Otherwise use resource size
-      // Note: The file is stored decompressed, so we estimate traffic size
-      // based on typical compression ratios for each type
-      let trafficSize = resourceSize
-      if (resource.contentEncoding) {
-        // For compressed resources, estimate traffic size based on typical ratios
-        // These are rough estimates - actual values would require re-compression
-        const compressionRatios: Record<ResourceType, number> = {
-          document: 0.2,
-          stylesheet: 0.15,
-          script: 0.25,
-          image: 0.95, // Images are usually already compressed
-          font: 0.7,
-          other: 0.5,
-        }
-        trafficSize = Math.round(resourceSize * compressionRatios[type])
-      }
-
-      stat.count++
-      stat.trafficSize += trafficSize
-      stat.resourceSize += resourceSize
-    } catch {
-      // File not found or other error - skip
-    }
+    stat.count++
+    stat.trafficSize += item.transferSize ?? 0
+    stat.resourceSize += item.resourceSize ?? 0
   }
 
   // Filter out types with no resources and sort by fixed order
-  const typeOrder: ResourceType[] = ['document', 'stylesheet', 'script', 'image', 'font', 'other']
-  const stats = Array.from(statsMap.values())
-    .filter((s) => s.count > 0)
-    .sort((a, b) => typeOrder.indexOf(a.type) - typeOrder.indexOf(b.type))
+  const stats = types.map((type) => statsMap.get(type) as ResourceTypeStats).filter((s) => s.count > 0)
 
   const totals = stats.reduce(
     (acc, s) => ({
@@ -230,11 +227,11 @@ export async function generateLighthouseSummary(
   lines.push('')
 
   // Section 3: Resource Traffic (if inventory data is provided)
-  if (opts.resources && opts.inventoryDir) {
-    const { stats, totals } = await calculateResourceStats(opts.resources, opts.inventoryDir)
+  if (opts.resources) {
+    const { stats, totals } = calculateResourceStats(report)
 
     if (stats.length > 0) {
-      // Traffic section (compressed/transferred size)
+      // Traffic section (bytes received, after compression and headers)
       lines.push('## Traffic: Type / Count / Size / Bytes')
       lines.push('')
       for (const stat of stats) {
@@ -247,7 +244,7 @@ export async function generateLighthouseSummary(
       )
       lines.push('')
 
-      // Resource section (decompressed/original size)
+      // Resource section (decoded body size)
       lines.push('## Resource: Type / Count / Size / Bytes')
       lines.push('')
       for (const stat of stats) {

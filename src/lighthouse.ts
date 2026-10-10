@@ -14,7 +14,6 @@ export interface ExecLighthouseInput {
   headless: boolean
   timeout: number
   captureScoreAndMetrics?: boolean
-  inventoryDir?: string
   resources?: Resource[]
 }
 
@@ -36,7 +35,12 @@ export async function execLighthouse(
     `--form-factor=${deviceType}`,
     // Set screen emulation to match form factor
     `--screenEmulation.mobile=${deviceType === 'mobile' ? 'true' : 'false'}`,
+    // Report the load as observed. The proxy already reproduces each resource's
+    // timing; Lighthouse's default 'simulate' method would discard that and
+    // re-derive the metrics from its own network model, which ignores the proxy.
+    '--throttling-method=provided',
     // Disable throttling as Rust proxy handles timing accurately
+    '--throttling.requestLatencyMs=0',
     '--throttling.rttMs=0',
     '--throttling.throughputKbps=0',
     '--throttling.downloadThroughputKbps=0',
@@ -82,7 +86,6 @@ export async function execLighthouse(
         {
           jsonPath,
           outputPath: summaryPath,
-          inventoryDir: opts.inventoryDir,
           resources: opts.resources,
         },
         dependency

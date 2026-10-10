@@ -1,0 +1,42 @@
+{
+  "$schema": "https://context7.com/schema/context7.json",
+  "projectTitle": "pagespeed-quest",
+  "description": "Freeze any public web page into a local, editable recording and replay it with its original per-resource latency and bandwidth, so front-end speed hypotheses can be measured without the site's development environment. Records through an HTTP proxy (rust-http-playback-proxy), stores every response as an editable file, and measures the replay with Lighthouse, a loadshow filmstrip video, and screenshot diffs. CLI name: psq.",
+  "folders": [
+    "llmdocs"
+  ],
+  "excludeFolders": [
+    "node_modules",
+    "build",
+    "bin",
+    "inventory",
+    "artifacts",
+    "test",
+    "coverage",
+    "docs"
+  ],
+  "excludeFiles": [
+    "CHANGELOG.md",
+    "package-lock.json",
+    "yarn.lock",
+    "README.ja.md"
+  ],
+  "rules": [
+    "The CLI binary is `psq`, installed as a project-local dev dependency of a quest directory — not globally. It resolves Lighthouse from ./node_modules/.bin/lighthouse and writes ./inventory and ./artifacts relative to the working directory, so a global install works only by accident.",
+    "Options belong to the command they are declared on and must appear before the next subcommand. `psq -i ./baseline lighthouse -a ./artifacts playback` is correct; `psq lighthouse playback -i ./baseline` is not.",
+    "`playback` never takes a URL. The entry URL and the device type are stored in inventory/index.json at recording time and reused; changing the target means recording again.",
+    "inventory/index.json is the file the playback proxy reads. If an inventory.json also exists (older recordings wrote both names), psq reads that one for the entry URL and traffic statistics while the proxy serves from index.json — delete it or keep the two identical.",
+    "An unedited resource is served byte for byte as recorded, in the recorded time. An edited one (file, contentEncoding, contentCharset or minify changed) takes `ttfbMs + wire bytes × 8 / (mbps × 1,000,000)`, where ttfbMs is a per-request sleep rather than an offset from page start, and the wire bytes are counted after re-minification and re-compression. Editing a file's bytes therefore changes its transfer time with no other edit; editing content-length does nothing because it is recomputed. This needs `formatVersion: 2` in index.json (psq 0.12 or later); older recordings replay the recorded duration whatever the size — re-record them.",
+    "Never edit the `original` field of a resource or the files under inventory/originals/. They hold the recorded wire bytes and the hash that tells playback a resource is unedited.",
+    "A resource with `\"minify\": true` is re-minified before it is served. The pretty-printed file under contents/ is for editing; whitespace changes have no effect on the wire.",
+    "Requests that match nothing in the inventory get a 404 — deliberately, so the replay stays deterministic. Deleting a resource entry models a failed request, not an absent one; remove the reference from the HTML in the same edit.",
+    "Lighthouse runs with --throttling-method=provided and all throttling at zero because the proxy reproduces timing per resource: the metrics are the replay as observed. Re-enabling throttling applies the penalty twice; the default 'simulate' method ignores the proxy entirely. Scores from psq before 0.12 were simulated and are not comparable.",
+    "`psq capture` runs the proxy in full-throttle mode — no TTFB and no bandwidth simulation — because it answers what the page looks like, not when. Never quote a timing number from a capture run.",
+    "Recording sends real traffic to the target site. Use -x/--exclude with a regex (repeatable) to leave analytics and ad beacons out when studying first-party code — but not when the question is what the third parties cost.",
+    "Every comparison must come from one recording: copy inventory/ to baseline/ (never edited) and accepted/ (adopted changes) before the first edit, start each trial from a fresh copy of accepted/, and compare playback measurements only. Comparing against the live site is not a comparison.",
+    "The Lighthouse report written by `psq lighthouse recording` measured the live site through the recording proxy and has no Traffic section. Send it aside with `-a ./artifacts/recording` and measure the baseline with `psq -i ./baseline lighthouse playback`.",
+    "Never conclude from one Lighthouse run. Use one -a directory per run (the same -a overwrites), take the median of at least three runs per state, and treat differences smaller than the spread as no effect.",
+    "contentFilePath in index.json is relative to the inventory directory and starts with contents/<method in lower case>/ — resolve files from it instead of guessing from the URL.",
+    "`psq llm` prints this reference for the exact installed version, and `psq llm --format json` returns it as an array of chapters. Read it before driving the CLI."
+  ]
+}

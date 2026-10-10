@@ -1,0 +1,157 @@
+# The inventory — what you edit
+
+The inventory is the reverse-engineered page. Everything the browser will
+receive during playback comes from here, and nothing else does.
+
+```
+inventory/
+├── index.json                     ← the resource list. THIS is what the proxy reads
+├── originals/                     ← the recorded wire bytes of reformatted bodies. Never edit
+└── contents/
+    └── get/
+        └── https/
+            └── example.com/
+                ├── index.html
+                ├── assets/app.css
+                ├── assets/app.js
+                └── img/hero.jpg
+```
+
+- **`index.json` is authoritative.** The playback proxy reads exactly that file
+  name. If a file called `inventory.json` also exists (older recordings wrote
+  both names), `psq` will read *that* one for the entry URL, device type and
+  traffic figures while the proxy serves from `index.json` — the two silently
+  disagree. Delete `inventory.json`, or keep it byte-identical.
+- **`contents/` holds one file per response body.** Text bodies are stored
+  decoded and converted to UTF-8; minified CSS and JavaScript are also
+  pretty-printed (and marked `minify: true`), HTML is kept as recorded.
+- **`originals/` keeps the bytes that went over the wire** for every body that
+  was stored differently (decompressed, re-encoded or pretty-printed). Playback
+  serves them for unedited resources. Do not edit or delete it.
+
+## How a URL becomes a path
+
+`contents/<method, lower-case>/<protocol>/<host>/<pathname>`
+
+| URL | File |
+| --- | --- |
+| `https://example.com/` | `contents/get/https/example.com/index.html` |
+| `https://example.com/assets/app.css` | `contents/get/https/example.com/assets/app.css` |
+| `https://example.com/app.js?v=1` | `contents/get/https/example.com/app~v%3D1.js` |
+
+Rules: a trailing `/` gets `index.html`; the query string is URL-encoded and
+inserted after `~`, before the extension; a query longer than 32 characters is
+cut there and suffixed with `.~<sha1 of the rest>`. Do not guess and do not
+rename these files by hand — `contentFilePath` in `index.json` (relative to the
+inventory directory, so it starts with `contents/`) is the mapping, and the file
+name is only a convenience:
+
+```sh
+jq -r '.resources[] | [.url, .contentFilePath] | @tsv' inventory/index.json
+```
+
+## `index.json`
+
+```json
+{
+  "entryUrl": "https://example.com/",
+  "deviceType": "mobile",
+  "formatVersion": 2,
+  "resources": [ ... ]
+}
+```
+
+`entryUrl` and `deviceType` are what `playback` uses instead of asking you for a
+URL. Changing `deviceType` here changes the Lighthouse form factor and the
+loadshow preset on the next playback — it does **not** re-record.
+`formatVersion` is `2` for recordings made with psq 0.12 or later; without it
+the older timing model applies (see below).
+
+### A resource
+
+| Field | Effect at playback time |
+| --- | --- |
+| `method`, `url` | how the request is matched. A request that matches nothing gets a 404. Required |
+| `ttfbMs` | **the proxy sleeps this long after receiving the request, before the first byte.** Per request, not an offset from page start. Required |
+| `durationMs` | recorded transfer duration. Used as-is only by recordings without `formatVersion: 2` |
+| `mbps` | transfer speed for the body, measured at recording. Used for an edited body. Missing → the median of the same host |
+| `statusCode` | the status served |
+| `rawHeaders` | headers served, minus `content-length` and `content-encoding`, which are recomputed |
+| `contentEncoding` | `gzip` / `br` / `deflate` / `zstd` / `compress` / `identity`. The body is **re-compressed with this before it goes on the wire**, so it decides the transferred size |
+| `contentTypeMime`, `contentCharset` | the `Content-Type` served. `contentCharset` re-encodes the body from UTF-8 on the way out |
+| `contentFilePath` | the file under `contents/` to serve |
+| `contentUtf8` / `contentBase64` | inline body, used only when there is no `contentFilePath`. Recordings do not write it |
+| `minify` | `true` → the body is **re-minified before serving**. Set during recording when the original was minified |
+| `httpVersion` | protocol version reported for the response |
+| `original` | written by the recorder: the path of the recorded wire bytes under `originals/`, a SHA-256 of the file in `contents/`, and the `contentEncoding` / `contentCharset` / `minify` at recording time. **Do not edit** |
+
+### The timing model, precisely
+
+```
+unedited body:  recorded wire bytes, ttfbMs + the recorded transfer time
+edited body:    ttfbMs  +  (bytes on the wire × 8) / (mbps × 1,000,000)
+```
+
+- A body is **unedited** while its file still matches the hash in `original`
+  and `contentEncoding`, `contentCharset` and `minify` are as recorded. It is
+  then served byte for byte as the site sent it — same compression, same size,
+  same time. Changing any of those makes it edited.
+- `ttfbMs` is a fixed per-request delay. It models server think time plus
+  connection latency. Lower it to model a faster origin or a nearer CDN edge.
+- For an edited body the transfer time is recomputed **from the bytes you leave
+  in the file**, after minification and after `contentEncoding` compression. So
+  shrinking a file makes it arrive sooner, with no other edit. `mbps` was
+  measured per resource at recording, so the same bytes take the time they took
+  on that connection.
+- **Recordings without `formatVersion: 2`** (psq before 0.12) replay every body
+  in its recorded `durationMs` whatever its size, and re-minify text bodies with
+  an older minifier. Shrinking a file does not make it faster there. Re-record
+  to get the model above.
+- `--full-throttle` (used internally by `psq capture`) skips both. Never compare
+  a full-throttle run with a normal one.
+
+### Two traps worth stating plainly
+
+**`minify: true` re-minifies your edit.** The pretty-printed file in `contents/`
+is for you; the wire sees the minified form. This keeps the byte count honest —
+the original site shipped minified bytes — but it means whitespace edits have no
+size effect, and it means a syntax error introduced during editing can surface
+as a minifier failure rather than a browser error.
+
+**`contentEncoding` decides the transferred size, not the file size.** A 300 KB
+JavaScript file with `"contentEncoding": "br"` is perhaps 60 KB on the wire, and
+that 60 KB is what the timing is computed from. To model "we turned compression
+off", set it to `identity`; to model "we finally enabled Brotli", set it to
+`br`. Do not edit `content-length` — it is recomputed and your value is
+discarded.
+
+## Editing safely
+
+1. Copy `inventory/` to `baseline/` (and to `accepted/`) before the first edit.
+2. Change **one thing at a time**, then measure. Two edits in one run means you
+   cannot attribute the delta. Start each trial from a fresh copy of
+   `accepted/` (see "The loop" in the guide).
+3. After a structural edit (removing a script, changing a URL), run
+   `psq capture --compare` and look at the picture. A faster broken page is easy
+   to produce and easy to mistake for a win.
+4. Keep the inventory in version control if the quest lasts more than a day.
+   `git diff` over `contents/` is a readable record of the hypothesis.
+
+## Live editing with a browser
+
+```sh
+psq proxy -p 8080
+```
+
+serves the inventory and **watches it**: any change under `inventory/` restarts
+the proxy, so a browser pointed at `http://localhost:8080` picks up your edit on
+the next reload. The proxy uses a dummy certificate, so the browser has to be
+told to accept it:
+
+```sh
+/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome \
+  --ignore-certificate-errors --proxy-server=http://localhost:8080
+```
+
+This is the fastest way to iterate on markup edits before spending a Lighthouse
+run on them.
