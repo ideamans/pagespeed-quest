@@ -103,7 +103,6 @@ function registerLighthouseCommands(main: Command) {
             artifactsDir,
             headless: !laud,
             timeout,
-            inventoryDir,
             resources: inventory.resources,
           },
           dependency()

@@ -6,6 +6,7 @@ receive during playback comes from here, and nothing else does.
 ```
 inventory/
 ├── index.json                     ← the resource list. THIS is what the proxy reads
+├── originals/                     ← the recorded wire bytes of reformatted bodies. Never edit
 └── contents/
     └── get/
         └── https/
@@ -22,8 +23,11 @@ inventory/
   traffic figures while the proxy serves from `index.json` — the two silently
   disagree. Delete `inventory.json`, or keep it byte-identical.
 - **`contents/` holds one file per response body.** Text bodies are stored
-  decoded, converted to UTF-8 and pretty-printed, so they are diffable and
-  editable by hand.
+  decoded and converted to UTF-8; minified CSS and JavaScript are also
+  pretty-printed (and marked `minify: true`), HTML is kept as recorded.
+- **`originals/` keeps the bytes that went over the wire** for every body that
+  was stored differently (decompressed, re-encoded or pretty-printed). Playback
+  serves them for unedited resources. Do not edit or delete it.
 
 ## How a URL becomes a path
 
@@ -52,6 +56,7 @@ jq -r '.resources[] | [.url, .contentFilePath] | @tsv' inventory/index.json
 {
   "entryUrl": "https://example.com/",
   "deviceType": "mobile",
+  "formatVersion": 2,
   "resources": [ ... ]
 }
 ```
@@ -59,6 +64,8 @@ jq -r '.resources[] | [.url, .contentFilePath] | @tsv' inventory/index.json
 `entryUrl` and `deviceType` are what `playback` uses instead of asking you for a
 URL. Changing `deviceType` here changes the Lighthouse form factor and the
 loadshow preset on the next playback — it does **not** re-record.
+`formatVersion` is `2` for recordings made with psq 0.12 or later; without it
+the older timing model applies (see below).
 
 ### A resource
 
@@ -66,28 +73,40 @@ loadshow preset on the next playback — it does **not** re-record.
 | --- | --- |
 | `method`, `url` | how the request is matched. A request that matches nothing gets a 404. Required |
 | `ttfbMs` | **the proxy sleeps this long after receiving the request, before the first byte.** Per request, not an offset from page start. Required |
-| `durationMs` | recorded transfer duration. Informational; playback derives its own from size and `mbps` |
-| `mbps` | transfer speed for the body. Missing → 1.0 Mbps |
+| `durationMs` | recorded transfer duration. Used as-is only by recordings without `formatVersion: 2` |
+| `mbps` | transfer speed for the body, measured at recording. Used for an edited body. Missing → the median of the same host |
 | `statusCode` | the status served |
 | `rawHeaders` | headers served, minus `content-length` and `content-encoding`, which are recomputed |
 | `contentEncoding` | `gzip` / `br` / `deflate` / `zstd` / `compress` / `identity`. The body is **re-compressed with this before it goes on the wire**, so it decides the transferred size |
 | `contentTypeMime`, `contentCharset` | the `Content-Type` served. `contentCharset` re-encodes the body from UTF-8 on the way out |
 | `contentFilePath` | the file under `contents/` to serve |
-| `contentUtf8` / `contentBase64` | inline body, used instead of the file when present |
+| `contentUtf8` / `contentBase64` | inline body, used only when there is no `contentFilePath`. Recordings do not write it |
 | `minify` | `true` → the body is **re-minified before serving**. Set during recording when the original was minified |
 | `httpVersion` | protocol version reported for the response |
+| `original` | written by the recorder: the path of the recorded wire bytes under `originals/`, a SHA-256 of the file in `contents/`, and the `contentEncoding` / `contentCharset` / `minify` at recording time. **Do not edit** |
 
 ### The timing model, precisely
 
 ```
-response time ≈ ttfbMs  +  (bytes on the wire × 8) / (mbps × 1,000,000)
+unedited body:  recorded wire bytes, ttfbMs + the recorded transfer time
+edited body:    ttfbMs  +  (bytes on the wire × 8) / (mbps × 1,000,000)
 ```
 
+- A body is **unedited** while its file still matches the hash in `original`
+  and `contentEncoding`, `contentCharset` and `minify` are as recorded. It is
+  then served byte for byte as the site sent it — same compression, same size,
+  same time. Changing any of those makes it edited.
 - `ttfbMs` is a fixed per-request delay. It models server think time plus
   connection latency. Lower it to model a faster origin or a nearer CDN edge.
-- The second term is recomputed **from the bytes you leave in the file**, after
-  minification and after `contentEncoding` compression. So shrinking a file
-  makes it arrive sooner, automatically, with no other edit.
+- For an edited body the transfer time is recomputed **from the bytes you leave
+  in the file**, after minification and after `contentEncoding` compression. So
+  shrinking a file makes it arrive sooner, with no other edit. `mbps` was
+  measured per resource at recording, so the same bytes take the time they took
+  on that connection.
+- **Recordings without `formatVersion: 2`** (psq before 0.12) replay every body
+  in its recorded `durationMs` whatever its size, and re-minify text bodies with
+  an older minifier. Shrinking a file does not make it faster there. Re-record
+  to get the model above.
 - `--full-throttle` (used internally by `psq capture`) skips both. Never compare
   a full-throttle run with a normal one.
 

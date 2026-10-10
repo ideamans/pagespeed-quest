@@ -14,7 +14,6 @@ export interface ExecLighthouseInput {
   headless: boolean
   timeout: number
   captureScoreAndMetrics?: boolean
-  inventoryDir?: string
   resources?: Resource[]
 }
 
@@ -87,7 +86,6 @@ export async function execLighthouse(
         {
           jsonPath,
           outputPath: summaryPath,
-          inventoryDir: opts.inventoryDir,
           resources: opts.resources,
         },
         dependency

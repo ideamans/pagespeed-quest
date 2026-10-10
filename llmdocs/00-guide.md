@@ -127,6 +127,7 @@ evidence for *why* a page is slow come from `lighthouse.report.json` — see
 | `unknown option '-i'` / the option is ignored | root and group options were placed after the subcommand | `psq -i ./baseline lighthouse -a ./art playback` |
 | the "after" is faster but the page is visibly broken | a referenced resource was deleted from `index.json` but not from the HTML | run `psq capture --compare` and look at the diff before trusting any number |
 | edits to a `.js` / `.css` file seem to have no effect on transfer size | the resource has `"minify": true`, so playback re-minifies before serving | expected — the wire size reflects the minified bytes, which is what the original site shipped |
+| a smaller file loads no faster | the recording has no `formatVersion: 2` (made before psq 0.12) and replays the recorded duration | re-record |
 | the page looks fine but LCP got worse for no reason | an edit changed the byte size of a resource, and transfer time scales with size at the recorded `mbps` | that *is* the simulation working; check `summary.md` traffic figures |
 | recording captured analytics and ad beacons | third parties were not excluded | re-record with `-x 'google-analytics|doubleclick|facebook'` (repeatable) |
 | `loadshow` / `static-webshot` not found | the postinstall step that downloads them did not run | re-run `npm rebuild pagespeed-quest`, or set `LOADSHOW_PATH` / `WEBSHOT_PATH` |

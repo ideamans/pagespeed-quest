@@ -10,6 +10,9 @@ All notable changes to this project will be documented in this file. See [standa
 * Document that the report written by `psq lighthouse recording` measured the live site and must not be used as the baseline
 * Fix the documented inventory layout: method directories are lower-case (`contents/get/…`), queries are URL-encoded before the extension, and `contentFilePath` is relative to the inventory directory
 * Document that `method`, `url` and `ttfbMs` are required when adding a resource to `index.json`
+* **Bundle rust-http-playback-proxy 0.11.0.** Recordings now carry `formatVersion: 2`: a resource you did not edit replays byte for byte as the site sent it, in the recorded time, and an edited one takes time proportional to its size on the wire at the recorded per-resource speed. Shrinking a file finally makes it arrive sooner. HTML is stored as recorded instead of reformatted, and the bytes that went over the wire are kept in `inventory/originals/` — do not edit them or the `original` field. Recordings made with earlier versions still replay as before (recorded duration whatever the size); re-record them to get size-proportional timing
+* The *Traffic* table in `summary.md` is now what the browser received in the run (Lighthouse's `network-requests`), not an estimate from fixed compression ratios; *Resource* is the decoded size from the same source
+* Fix the documentation of inline `contentUtf8` / `contentBase64`: they are used only when there is no `contentFilePath`, not in preference to the file
 
 ### 0.11.0 (2026-08-16)
 
