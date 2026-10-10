@@ -32,6 +32,9 @@ Each run writes:
 | `lighthouse.digest.png` | score gauge and metrics as one image — the thing to paste into a report |
 | `lighthouse-0.trace.json`, `*.devtoolslog.json` | saved assets (`--save-assets`) |
 
+A playback run takes roughly 20–30 seconds: Lighthouse measures the load as
+observed (`--throttling-method=provided`) and waits for the page to go quiet.
+
 Options on the `lighthouse` group: `-a/--artifacts` (default `./artifacts`),
 `-t/--timeout` (ms, default 30000), `-l/--laud` — show the browser window and
 open the report at the end. `--laud` is for watching a run, not for measuring;
@@ -39,8 +42,8 @@ a visible browser is not the same environment as the headless one.
 
 ### Medians and spread
 
-**Never conclude from one run.** Runs of the same recording differ, on LCP
-sometimes by hundreds of milliseconds. Take the median of at least three runs
+**Never conclude from one run.** Runs of the same recording are close but not
+identical, and an occasional run is an outlier. Take the median of at least three runs
 per state, and call a difference real only when it is larger than the spread
 (max − min) within each state:
 

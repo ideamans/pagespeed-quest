@@ -2,8 +2,9 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
-### Unreleased
+### 0.12.0 (unreleased)
 
+* **Lighthouse now reports the replay as observed** (`--throttling-method=provided`, plus `--throttling.requestLatencyMs=0`). Until now Lighthouse ran with its default `simulate` method, which re-derives every metric from its own network model and ignores the timing the proxy reproduces — reported FCP could even be shorter than the document's TTFB, and repeated runs of one recording disagreed by hundreds of milliseconds. **Scores and metrics change, and are not comparable with earlier versions.** A playback run now takes roughly 20–30 seconds, because Lighthouse waits for the page to go quiet
 * Restructure the Agent Skills bundle around a whole investigation of a URL. `psq-usage` now runs record → measure → investigate → one change per trial → adopt or reject → report, with `baseline/` (never edited), `accepted/` (adopted changes) and a `quest-log.md`; new `psq-record` (recording, checking it, freezing the baseline) and `psq-measure` (several runs per state with medians and spread, reading `lighthouse.report.json` for the LCP element, waterfall, script cost and third parties, screenshot diffs)
 * The skills and `llmdocs/20-experiments.md` no longer prescribe optimizations; they cover how an edit reaches the replay and what cannot be modelled, and leave the choice of changes to the agent
 * Document that the report written by `psq lighthouse recording` measured the live site and must not be used as the baseline
