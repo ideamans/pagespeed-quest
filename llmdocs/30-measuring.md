@@ -150,6 +150,9 @@ banner will make every metric better and the page wrong.
 - script / 14 / 512.3 KB / 524595
 ```
 
-*Traffic* is what crossed the wire (after compression); *Resource* is the
-decompressed size. A change that moves resource size but not traffic size means
-you edited something that compresses away — expect little timing effect.
+*Traffic* is what the browser received in this run, as Lighthouse measured it
+(after compression, headers included); *Resource* is the decoded body size.
+Both come from the report's `network-requests` audit, so they count every
+request the page made, including 404s. A change that moves resource size but
+not traffic size means you edited something that compresses away — expect
+little timing effect.

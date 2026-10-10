@@ -60,7 +60,7 @@ The codebase follows a modular architecture with clear separation of concerns:
    - Format: `inventory/contents/<method, lower-case>/<protocol>/<hostname>/<...path>`; each resource's `contentFilePath` is authoritative
    - Metadata: the Rust proxy writes and serves `inventory/index.json`. `inventory.json` is an older name that `InventoryRepository` still reads first when it exists — which is why the agent docs say to delete it (`llmdocs/10-inventory.md`)
    - Supports file watching for live updates during playback
-   - Automatically beautifies minified HTML/CSS/JS for readability
+   - Pretty-prints minified CSS/JS for editing (HTML is stored as recorded); the recorded wire bytes go to `originals/` so unedited resources replay byte for byte
 
 3. **Performance Tools Integration**:
    - **Lighthouse** (`lighthouse.ts`): Runs Google Lighthouse through the proxy

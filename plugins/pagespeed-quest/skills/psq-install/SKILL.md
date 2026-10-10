@@ -39,7 +39,9 @@ round trip and answers a question nobody asked.
 node -v
 ```
 
-Node 22.19 or newer is required (`engines.node: ">=22.19"`, Lighthouse 13's floor). If the version is older,
+Supported platforms are macOS on Apple Silicon, Linux (x64, arm64) and Windows
+(x64); **Intel Macs are not supported**. Node 22.19 or newer is required
+(`engines.node: ">=22.19"`, Lighthouse 13's floor). If the version is older,
 stop and tell the user — do not try to install or switch Node versions on their
 behalf.
 
@@ -115,7 +117,7 @@ them.
 | --- | --- | --- |
 | `psq: command not found` | invoked outside the project, or a global install was assumed | run `npx psq …` from the project directory |
 | postinstall fails downloading loadshow / static-webshot | no access to github.com, or an unsupported platform | Lighthouse measurement still works; set `LOADSHOW_PATH` / `WEBSHOT_PATH` to your own builds for the rest |
-| `Unsupported platform` from postinstall | only darwin-arm64, linux-amd64, linux-arm64 and windows-amd64 have prebuilt helpers | build `go-loadshow` / `static-webshot` yourself and point the env vars at them |
+| `Unsupported platform` from postinstall | only darwin-arm64, linux-amd64, linux-arm64 and windows-amd64 have prebuilt binaries. **Intel Macs are not supported** — the playback proxy refuses to start there too, so psq cannot be used at all | use an Apple Silicon Mac, Linux or Windows; elsewhere, build `go-loadshow` / `static-webshot` yourself and point the env vars at them |
 | the install takes minutes | puppeteer downloads a Chromium build | expected on first install |
 | `npx psq` resolves to a different package | the project has no local install and npx fetched something from the registry | install it as a dev dependency first; never rely on a bare `npx psq` |
 | Node version error | the package requires Node ≥ 22.19 | ask the user to switch Node; do not change their runtime for them |

@@ -76,7 +76,7 @@ more runs before deciding, or call it no effect.
 
 | File | Contents |
 | --- | --- |
-| `summary.md` | metrics, per-metric scores with Lighthouse weights (LCP ×0.25, CLS ×0.25, TBT ×0.30, FCP ×0.10, SI ×0.10), *Traffic* (on the wire) and *Resource* (decoded) bytes by type |
+| `summary.md` | metrics, per-metric scores with Lighthouse weights (LCP ×0.25, CLS ×0.25, TBT ×0.30, FCP ×0.10, SI ×0.10), *Traffic* (bytes received, as Lighthouse measured them) and *Resource* (decoded) bytes by type |
 | `lighthouse.report.json` | the full report — the evidence for the investigation below |
 | `lighthouse.report.html` | the same, for a human (`open` it) |
 | `lighthouse.digest.png` | score and metrics as one image, for the report |

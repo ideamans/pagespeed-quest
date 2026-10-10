@@ -12,7 +12,8 @@ Paths below are relative to the inventory directory.
 Edit the file a resource's `contentFilePath` points to. The browser receives and
 executes exactly those bytes, so effects on parsing, script execution, layout
 and paint are **measured, not estimated**, and the transfer time follows the new
-size automatically (see the timing model in "The inventory").
+size (see the timing model in "The inventory" — this needs a recording with
+`formatVersion: 2`, i.e. made with psq 0.12 or later).
 
 psq-specific rules:
 
@@ -27,8 +28,8 @@ psq-specific rules:
   `content-length`.
 - **`minify: true`** — the file is re-minified before serving. Whitespace has no
   effect on the wire; a syntax error may surface as a minifier failure.
-- **Inline bodies win** — if an entry has `contentUtf8` or `contentBase64`, that
-  is served instead of the file.
+- **Leave `original` and `originals/` alone.** They are how playback recognises
+  the resources you did not touch and serves them exactly as recorded.
 - **`ttfbMs` does not move with the content.** A preloaded, reprioritised or
   shrunk resource still waits its recorded `ttfbMs` before its first byte.
 

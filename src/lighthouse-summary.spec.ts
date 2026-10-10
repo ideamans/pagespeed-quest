@@ -306,167 +306,84 @@ test('generateLighthouseSummary - CLS value formatted with 3 decimal places', as
   }
 })
 
-test('generateLighthouseSummary - includes traffic statistics when resources provided', async (t) => {
+const silentDependency = {
+  logger: {
+    info: () => undefined,
+    warn: () => undefined,
+    error: () => undefined,
+  } as unknown as DependencyInterface['logger'],
+  mkdirp: async () => undefined,
+}
+
+const playbackResources: Resource[] = [{ method: 'GET', url: 'https://example.com/', ttfbMs: 100 }]
+
+test('generateLighthouseSummary - traffic comes from the bytes Lighthouse observed', async (t) => {
   const tmpDir = await fs.mkdtemp('/tmp/lighthouse-summary-test-')
   const jsonPath = Path.join(tmpDir, 'lighthouse.report.json')
   const outputPath = Path.join(tmpDir, 'summary.md')
-  const inventoryDir = Path.join(tmpDir, 'inventory')
 
   try {
-    // Create minimal report
     const report: LighthouseReport = {
-      categories: {
-        performance: {
-          id: 'performance',
-          title: 'Performance',
-          score: 0.8,
+      categories: { performance: { id: 'performance', title: 'Performance', score: 0.8 } },
+      audits: {
+        'network-requests': {
+          id: 'network-requests',
+          title: 'Network Requests',
+          score: null,
+          details: {
+            items: [
+              { url: 'https://example.com/', resourceType: 'Document', transferSize: 1200, resourceSize: 5000 },
+              { url: 'https://example.com/a.css', resourceType: 'Stylesheet', transferSize: 800, resourceSize: 4000 },
+              { url: 'https://example.com/a.js', resourceType: 'Script', transferSize: 3000, resourceSize: 9000 },
+              { url: 'https://cdn.example.com/b.js', resourceType: 'Script', transferSize: 2000, resourceSize: 6000 },
+              { url: 'https://example.com/x.webp', resourceType: 'Image', transferSize: 10240, resourceSize: 10000 },
+              { url: 'https://example.com/f.woff2', mimeType: 'font/woff2', transferSize: 500, resourceSize: 480 },
+              // never crossed the network
+              { url: 'data:image/png;base64,AAAA', resourceType: 'Image', transferSize: 0, resourceSize: 3 },
+            ],
+          },
         },
       },
-      audits: {},
     }
     await fs.writeFile(jsonPath, JSON.stringify(report), 'utf-8')
 
-    // Create inventory directory and test files
-    await fs.mkdir(inventoryDir, { recursive: true })
-    await fs.mkdir(Path.join(inventoryDir, 'GET/https/example.com'), { recursive: true })
-
-    // Create test content files
-    const htmlContent = '<html><body>Hello World</body></html>'
-    const cssContent = 'body { color: red; }'
-    const jsContent = 'console.log("hello");'
-    const imageContent = Buffer.alloc(1000) // 1KB fake image
-
-    await fs.writeFile(Path.join(inventoryDir, 'GET/https/example.com/index.html'), htmlContent)
-    await fs.writeFile(Path.join(inventoryDir, 'GET/https/example.com/style.css'), cssContent)
-    await fs.writeFile(Path.join(inventoryDir, 'GET/https/example.com/app.js'), jsContent)
-    await fs.writeFile(Path.join(inventoryDir, 'GET/https/example.com/image.png'), imageContent)
-
-    const resources: Resource[] = [
-      {
-        method: 'GET',
-        url: 'https://example.com/index.html',
-        ttfbMs: 100,
-        contentTypeMime: 'text/html',
-        contentFilePath: 'GET/https/example.com/index.html',
-      },
-      {
-        method: 'GET',
-        url: 'https://example.com/style.css',
-        ttfbMs: 50,
-        contentTypeMime: 'text/css',
-        contentFilePath: 'GET/https/example.com/style.css',
-        contentEncoding: 'gzip',
-      },
-      {
-        method: 'GET',
-        url: 'https://example.com/app.js',
-        ttfbMs: 50,
-        contentTypeMime: 'application/javascript',
-        contentFilePath: 'GET/https/example.com/app.js',
-        contentEncoding: 'gzip',
-      },
-      {
-        method: 'GET',
-        url: 'https://example.com/image.png',
-        ttfbMs: 200,
-        contentTypeMime: 'image/png',
-        contentFilePath: 'GET/https/example.com/image.png',
-      },
-    ]
-
-    await generateLighthouseSummary(
-      {
-        jsonPath,
-        outputPath,
-        inventoryDir,
-        resources,
-      },
-      {
-        logger: {
-          info: () => undefined,
-          warn: () => undefined,
-          error: () => undefined,
-        } as unknown as DependencyInterface['logger'],
-        mkdirp: async () => undefined,
-      }
-    )
+    await generateLighthouseSummary({ jsonPath, outputPath, resources: playbackResources }, silentDependency)
 
     const content = await fs.readFile(outputPath, 'utf-8')
+    const section = (title: string) => content.split(`## ${title}: Type / Count / Size / Bytes`)[1].split('\n\n')[1]
 
-    // Check that traffic and resource sections exist with column headers
-    t.true(content.includes('## Traffic: Type / Count / Size / Bytes'))
-    t.true(content.includes('## Resource: Type / Count / Size / Bytes'))
+    const traffic = section('Traffic')
+    t.true(traffic.includes('- document / 1 / 1.2 KB / 1200'))
+    t.true(traffic.includes('- stylesheet / 1 / 800 B / 800'))
+    t.true(traffic.includes('- script / 2 / 4.9 KB / 5000'))
+    t.true(traffic.includes('- image / 1 / 10.0 KB / 10240'))
+    t.true(traffic.includes('- font / 1 / 500 B / 500'))
+    t.true(traffic.includes('- **total** / 6 / 17.3 KB / 17740'))
 
-    // Check resource types are present
-    t.true(content.includes('document'))
-    t.true(content.includes('stylesheet'))
-    t.true(content.includes('script'))
-    t.true(content.includes('image'))
-
-    // Check totals are present
-    t.true(content.includes('**total**'))
-
-    // Check format includes both human-readable and raw bytes
-    t.regex(content, /\d+(\.\d+)?\s*(B|KB|MB)/)
-    t.regex(content, /- \*\*total\*\* \/ \d+ \/ .+ \/ \d+/)
+    const resource = section('Resource')
+    t.true(resource.includes('- script / 2 / 14.6 KB / 15000'))
+    t.true(resource.includes('- **total** / 6 / 33.7 KB / 34480'))
   } finally {
     await fs.rm(tmpDir, { recursive: true, force: true })
   }
 })
 
-test('generateLighthouseSummary - handles missing content files gracefully', async (t) => {
+test('generateLighthouseSummary - no traffic section when the report has no network requests', async (t) => {
   const tmpDir = await fs.mkdtemp('/tmp/lighthouse-summary-test-')
   const jsonPath = Path.join(tmpDir, 'lighthouse.report.json')
   const outputPath = Path.join(tmpDir, 'summary.md')
-  const inventoryDir = Path.join(tmpDir, 'inventory')
 
   try {
     const report: LighthouseReport = {
-      categories: {
-        performance: {
-          id: 'performance',
-          title: 'Performance',
-          score: 0.8,
-        },
-      },
+      categories: { performance: { id: 'performance', title: 'Performance', score: 0.8 } },
       audits: {},
     }
     await fs.writeFile(jsonPath, JSON.stringify(report), 'utf-8')
-    await fs.mkdir(inventoryDir, { recursive: true })
 
-    // Resource with non-existent file
-    const resources: Resource[] = [
-      {
-        method: 'GET',
-        url: 'https://example.com/missing.html',
-        ttfbMs: 100,
-        contentTypeMime: 'text/html',
-        contentFilePath: 'GET/https/example.com/missing.html',
-      },
-    ]
-
-    await generateLighthouseSummary(
-      {
-        jsonPath,
-        outputPath,
-        inventoryDir,
-        resources,
-      },
-      {
-        logger: {
-          info: () => undefined,
-          warn: () => undefined,
-          error: () => undefined,
-        } as unknown as DependencyInterface['logger'],
-        mkdirp: async () => undefined,
-      }
-    )
+    await generateLighthouseSummary({ jsonPath, outputPath, resources: playbackResources }, silentDependency)
 
     const content = await fs.readFile(outputPath, 'utf-8')
-
-    // Should still generate summary without traffic section (no valid files)
     t.true(content.includes('# Lighthouse Performance Summary'))
-    // Traffic section should not be present since no files were found
     t.false(content.includes('## Traffic'))
   } finally {
     await fs.rm(tmpDir, { recursive: true, force: true })
