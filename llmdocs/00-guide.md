@@ -61,40 +61,55 @@ version installed in the project you are working in.
    failed request, not a request that never happens. To model "this resource is
    gone", also remove the reference to it from the HTML.
 
-7. **Treat small deltas as noise.** Even against a fixed recording, Lighthouse
-   varies by a few points and tens of milliseconds run to run. Repeat a
-   measurement before believing a change under ~5% .
+7. **Never conclude from one run.** Even against a fixed recording, Lighthouse
+   varies between runs — on LCP sometimes by hundreds of milliseconds. Measure
+   each state at least three times, compare medians, and treat a difference
+   smaller than the spread within each state as no difference.
+
+8. **The recording run is not the baseline.** `psq lighthouse recording` also
+   writes a Lighthouse report, but it measured the live site through the
+   recording proxy. Send it somewhere out of the way
+   (`psq lighthouse -a ./artifacts/recording recording <url>`) and measure the
+   baseline by playback.
 
 ## The loop
 
 ```sh
 # 1. Freeze the page (writes ./inventory)
-npx psq lighthouse recording https://example.com/
+npx psq lighthouse -a ./artifacts/recording recording https://example.com/
 
-# 2. Keep the untouched copy
+# 2. Keep the untouched copy, and a copy that accumulates adopted changes
 cp -r inventory baseline
+cp -r inventory accepted
 
-# 3. Measure the baseline  → artifacts/summary.md, artifacts/lighthouse.report.html
-npx psq -i ./baseline lighthouse -a ./artifacts-baseline playback
+# 3. Measure the baseline, three runs  → artifacts/baseline-N/summary.md, lighthouse.report.json
+for n in 1 2 3; do npx psq -i ./baseline lighthouse -a ./artifacts/baseline-$n playback; done
 
-# 4. Edit ./inventory — see chapter "Experiments"
+# 4. Each trial: start from accepted, make ONE edit to ./inventory (chapter "Experiments")
+rm -rf inventory && cp -r accepted inventory
 
-# 5. Measure the edited version
-npx psq lighthouse playback
+# 5. Measure the trial, three runs, and check it still renders (chapter "Measuring")
+for n in 1 2 3; do npx psq lighthouse -a ./artifacts/t01-$n playback; done
 
-# 6. Compare artifacts-baseline/summary.md with artifacts/summary.md
+# 6. Better beyond the spread and visually unchanged → adopt it
+rm -rf accepted && cp -r inventory accepted
+
+# 7. At the end, measure accepted against baseline from scratch
+for n in 1 2 3; do npx psq -i ./accepted lighthouse -a ./artifacts/final-$n playback; done
 ```
 
 `summary.md` is a short Markdown digest (metrics, per-metric scores with their
-Lighthouse weights, traffic by resource type). It is written for exactly this
-comparison — diff the two files rather than opening two HTML reports.
+Lighthouse weights, traffic by resource type). Medians across runs and the
+evidence for *why* a page is slow come from `lighthouse.report.json` — see
+"Measuring".
 
 ## What lives where
 
 | Path | What it is |
 | --- | --- |
 | `inventory/index.json` | the resource list and every resource's metadata. This is the file the proxy reads |
-| `inventory/contents/<METHOD>/<protocol>/<host>/<path>` | one file per recorded response body |
+| `baseline/`, `accepted/` | conventional copies: the page as recorded, and the page with the adopted changes |
+| `inventory/contents/<method>/<protocol>/<host>/<path>` | one file per recorded response body; `contentFilePath` gives the exact path |
 | `artifacts/lighthouse.report.html`, `.report.json` | the full Lighthouse report |
 | `artifacts/summary.md` | the digest to diff |
 | `artifacts/lighthouse.digest.png` | score and metrics as an image |
@@ -113,12 +128,15 @@ comparison — diff the two files rather than opening two HTML reports.
 | recording captured analytics and ad beacons | third parties were not excluded | re-record with `-x 'google-analytics|doubleclick|facebook'` (repeatable) |
 | `loadshow` / `static-webshot` not found | the postinstall step that downloads them did not run | re-run `npm rebuild pagespeed-quest`, or set `LOADSHOW_PATH` / `WEBSHOT_PATH` |
 | Lighthouse cannot be found | it resolves to `./node_modules/.bin/lighthouse` | run inside the quest project, or set `LIGHTHOUSE_PATH` |
-| numbers drift between identical runs | normal measurement noise | repeat; do not act on deltas under ~5% |
+| numbers drift between identical runs | normal measurement noise | three runs or more per state; compare medians against the spread |
+| the baseline came from the recording run | that report measured the live site | measure the baseline with `psq -i ./baseline lighthouse … playback` |
+| trial deltas cannot be attributed | a trial was built on the previous trial, or bundled several edits | start every trial from a fresh copy of `accepted/`, one edit each |
 
 ## What this tool will not do
 
 - It does not crawl. One entry URL plus whatever that page load requests.
 - It does not modify the live site, and nothing you edit locally reaches it.
-- It does not rewrite your resources for you. Editing the inventory is the
-  work; this reference tells you which edit models which optimization.
+- It does not rewrite your resources for you, and this reference does not
+  prescribe optimizations. Deciding what to change is the work; this reference
+  covers how an edit reaches the replay and how to measure it.
 - It does not replay user interaction. What is recorded is one page load.

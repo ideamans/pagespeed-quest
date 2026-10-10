@@ -1,6 +1,6 @@
 {
   "name": "pagespeed-quest",
-  "description": "Adds /psq-install, /psq-usage, /psq-inventory and /psq-video skills for freezing any web page into an editable local recording, replaying it with the original timing, and measuring front-end speed hypotheses with Lighthouse, video and visual diffs.",
+  "description": "Adds /psq-usage, /psq-install, /psq-record, /psq-measure, /psq-inventory and /psq-video skills for investigating a page's loading speed: freeze any web page into an editable local recording, replay it with the original timing, try changes one at a time, and report what each measurably gained with Lighthouse, video and visual diffs.",
   "version": "0.11.0",
   "author": {
     "name": "Ideamans Inc.",

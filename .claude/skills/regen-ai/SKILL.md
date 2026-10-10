@@ -34,7 +34,7 @@ Regenerate, validate, and report what changed.
    | --- | --- |
    | a rule or a trap agents hit | `llmdocs/00-guide.md` |
    | the inventory schema or layout | `llmdocs/10-inventory.md` |
-   | what an edit does to the measurement | `llmdocs/20-experiments.md` |
+   | how an edit reaches the replay | `llmdocs/20-experiments.md` |
    | artifacts, comparison, video | `llmdocs/30-measuring.md` |
    | a pitfall worth telling context7 | `context7.json` (`rules`) |
    | how an agent should drive the tool | `plugins/pagespeed-quest/skills/*/SKILL.md` |

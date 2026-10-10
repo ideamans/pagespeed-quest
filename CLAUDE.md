@@ -57,8 +57,8 @@ The codebase follows a modular architecture with clear separation of concerns:
 
 2. **Inventory Management** (`inventory.ts`):
    - Stores recorded resources as files on disk
-   - Format: `inventory/[method]/[protocol]/[hostname]/[...path]`
-   - Metadata stored in `inventory/inventory.json` (Rust proxy format) and `inventory/index.json` (legacy format)
+   - Format: `inventory/contents/<method, lower-case>/<protocol>/<hostname>/<...path>`; each resource's `contentFilePath` is authoritative
+   - Metadata: the Rust proxy writes and serves `inventory/index.json`. `inventory.json` is an older name that `InventoryRepository` still reads first when it exists — which is why the agent docs say to delete it (`llmdocs/10-inventory.md`)
    - Supports file watching for live updates during playback
    - Automatically beautifies minified HTML/CSS/JS for readability
 

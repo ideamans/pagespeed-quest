@@ -56,6 +56,9 @@ npx psq -i ./baseline loadshow -a ./artifacts-baseline -c "Before" playback
 npx psq loadshow -a ./artifacts-after -c "After — deferred tag manager" playback
 ```
 
+At the end of a **psq-usage** quest, film `-i ./baseline` and `-i ./accepted`
+instead — `accepted/` holds every adopted change.
+
 `-c/--credit` stamps a label into the video. Always set it on a pair — an
 unlabelled before/after is unusable a week later.
 
@@ -82,17 +85,12 @@ finding.
 
 A video shows the shape of the improvement, not its size. Ship both:
 
-```bash
-npx psq -i ./baseline lighthouse -a ./artifacts-baseline playback
-npx psq lighthouse -a ./artifacts-after playback
-diff artifacts-baseline/summary.md artifacts-after/summary.md
-```
+Take the numbers with **psq-measure** — several Lighthouse runs per side and
+their medians, not one run each. Its `lighthouse.digest.png` is a ready-made
+score-and-metrics image to put next to the video.
 
-`artifacts-*/lighthouse.digest.png` is a ready-made score-and-metrics image to
-put next to the video.
-
-Use the **psq-usage** skill for the full measurement loop, and **psq-inventory**
-for what to edit between the two takes.
+Use **psq-usage** for the whole investigation, and **psq-inventory** for how
+to edit between the two takes.
 
 ## Failure modes
 

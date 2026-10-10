@@ -7,7 +7,7 @@ receive during playback comes from here, and nothing else does.
 inventory/
 ├── index.json                     ← the resource list. THIS is what the proxy reads
 └── contents/
-    └── GET/
+    └── get/
         └── https/
             └── example.com/
                 ├── index.html
@@ -27,20 +27,24 @@ inventory/
 
 ## How a URL becomes a path
 
-`contents/<METHOD>/<protocol>/<host>/<pathname>`
+`contents/<method, lower-case>/<protocol>/<host>/<pathname>`
 
 | URL | File |
 | --- | --- |
-| `https://example.com/` | `contents/GET/https/example.com/index.html` |
-| `https://example.com/assets/app.css` | `contents/GET/https/example.com/assets/app.css` |
-| `https://example.com/api?id=1` | `contents/GET/https/example.com/api~id=1` |
-| `https://cdn.example.com:8443/a.js` | `contents/GET/https/cdn.example.com~8443/a.js` |
+| `https://example.com/` | `contents/get/https/example.com/index.html` |
+| `https://example.com/assets/app.css` | `contents/get/https/example.com/assets/app.css` |
+| `https://example.com/app.js?v=1` | `contents/get/https/example.com/app~v%3D1.js` |
 
-Rules: a trailing `/` (or a path with no extension) gets `index.html`; the query
-string is appended after `~`; a colon in the host becomes `~`; an over-long
-basename is truncated and suffixed with a short SHA-1. Do not rename these files
-by hand — the mapping comes from `contentFilePath` in `index.json`, and the file
-name is only a convenience.
+Rules: a trailing `/` gets `index.html`; the query string is URL-encoded and
+inserted after `~`, before the extension; a query longer than 32 characters is
+cut there and suffixed with `.~<sha1 of the rest>`. Do not guess and do not
+rename these files by hand — `contentFilePath` in `index.json` (relative to the
+inventory directory, so it starts with `contents/`) is the mapping, and the file
+name is only a convenience:
+
+```sh
+jq -r '.resources[] | [.url, .contentFilePath] | @tsv' inventory/index.json
+```
 
 ## `index.json`
 
@@ -60,8 +64,8 @@ loadshow preset on the next playback — it does **not** re-record.
 
 | Field | Effect at playback time |
 | --- | --- |
-| `method`, `url` | how the request is matched. A request that matches nothing gets a 404 |
-| `ttfbMs` | **the proxy sleeps this long after receiving the request, before the first byte.** Per request, not an offset from page start |
+| `method`, `url` | how the request is matched. A request that matches nothing gets a 404. Required |
+| `ttfbMs` | **the proxy sleeps this long after receiving the request, before the first byte.** Per request, not an offset from page start. Required |
 | `durationMs` | recorded transfer duration. Informational; playback derives its own from size and `mbps` |
 | `mbps` | transfer speed for the body. Missing → 1.0 Mbps |
 | `statusCode` | the status served |
@@ -104,9 +108,10 @@ discarded.
 
 ## Editing safely
 
-1. Copy `inventory/` to `baseline/` before the first edit.
+1. Copy `inventory/` to `baseline/` (and to `accepted/`) before the first edit.
 2. Change **one thing at a time**, then measure. Two edits in one run means you
-   cannot attribute the delta.
+   cannot attribute the delta. Start each trial from a fresh copy of
+   `accepted/` (see "The loop" in the guide).
 3. After a structural edit (removing a script, changing a URL), run
    `psq capture --compare` and look at the picture. A faster broken page is easy
    to produce and easy to mistake for a win.

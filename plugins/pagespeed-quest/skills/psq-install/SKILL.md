@@ -2,7 +2,7 @@
 name: psq-install
 description: Set up a PageSpeed Quest project so the `psq` command is available, installing the pagespeed-quest npm package only if it is missing. Use when another PageSpeed Quest skill reports that `psq` cannot be found, when the user asks to install / update / upgrade PageSpeed Quest, or when starting a new speed investigation that needs a working directory to record into.
 license: GPL-3.0-or-later
-compatibility: Requires Node.js 22 or newer and network access to registry.npmjs.org and github.com (the postinstall step downloads the loadshow and static-webshot binaries). Chrome/Chromium is installed by the puppeteer dependency. Standalone — does NOT require psq to already be present.
+compatibility: Requires Node.js 22.19 or newer and network access to registry.npmjs.org and github.com (the postinstall step downloads the loadshow and static-webshot binaries). Chrome/Chromium is installed by the puppeteer dependency. Standalone — does NOT require psq to already be present.
 allowed-tools: Bash(node:*) Bash(npm:*) Bash(npx:*) Bash(yarn:*) Bash(which:*) Bash(command:*) Bash(mkdir:*) Bash(ls:*) Bash(cat:*) Bash(test:*) Read Write
 ---
 
@@ -39,7 +39,7 @@ round trip and answers a question nobody asked.
 node -v
 ```
 
-Node 22 or newer is required (`engines.node: ">=22"`). If the version is older,
+Node 22.19 or newer is required (`engines.node: ">=22.19"`, Lighthouse 13's floor). If the version is older,
 stop and tell the user — do not try to install or switch Node versions on their
 behalf.
 
@@ -72,12 +72,12 @@ npx psq llm | head -40
 
 `psq llm` prints the full agent reference for the installed version. Read it
 before driving the tool — it is the manual, and it always matches the version
-in this project.
+in this project. Then continue with **psq-usage** (the whole investigation) or
+**psq-record** (just the recording).
 
 ### 5. Only if the registry is not an option: build from source
 
-Last resort — it needs a Go-free but full Node toolchain and takes longer than
-the registry install. Use it when the user needs an unreleased change, or when
+Last resort — it takes longer than the registry install. Use it when the user needs an unreleased change, or when
 npmjs.org is unreachable.
 
 ```bash
@@ -118,4 +118,4 @@ them.
 | `Unsupported platform` from postinstall | only darwin-arm64, linux-amd64, linux-arm64 and windows-amd64 have prebuilt helpers | build `go-loadshow` / `static-webshot` yourself and point the env vars at them |
 | the install takes minutes | puppeteer downloads a Chromium build | expected on first install |
 | `npx psq` resolves to a different package | the project has no local install and npx fetched something from the registry | install it as a dev dependency first; never rely on a bare `npx psq` |
-| Node version error | the package requires Node ≥ 22 | ask the user to switch Node; do not change their runtime for them |
+| Node version error | the package requires Node ≥ 22.19 | ask the user to switch Node; do not change their runtime for them |

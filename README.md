@@ -139,8 +139,9 @@ However, since this HTTP proxy uses a dummy SSL certificate, please disable the 
 ## Driving it with an AI agent
 
 PageSpeed Quest ships its own reference for AI agents. One command prints
-everything an agent needs — the ground rules, the inventory schema, the timing
-model, and a catalogue of which edit models which optimization:
+everything an agent needs — the ground rules, the investigation loop, the
+inventory schema, the timing model, how an edit reaches the replay, and how to
+read the measurements:
 
 ```sh
 yarn psq llm              # Markdown (default)
@@ -157,10 +158,15 @@ The repository also ships an Agent Skills bundle under
 
 | Skill | What it covers |
 | --- | --- |
+| `psq-usage` | the whole investigation of a URL: record, measure, find bottlenecks, try changes one at a time, adopt what helps, report the gain |
 | `psq-install` | setting up a quest project so `psq` runs |
-| `psq-usage` | the record → baseline → edit → measure loop |
-| `psq-inventory` | the file layout and the catalogue of experiments |
+| `psq-record` | recording a page, checking the recording, freezing the baseline |
+| `psq-measure` | repeated Lighthouse runs and medians, reading the report for bottlenecks, screenshot diffs |
+| `psq-inventory` | how an edit to the recording reaches the replay |
 | `psq-video` | before/after videos of the load |
+
+The skills teach the tool, not web performance: choosing what to optimize is
+left to the agent.
 
 For Claude Code, add the ideamans marketplace and install the plugin:
 
