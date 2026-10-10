@@ -6120,10 +6120,10 @@ run-parallel@^1.1.9:
   dependencies:
     queue-microtask "^1.2.2"
 
-rust-http-playback-proxy@0.9.0:
-  version "0.9.0"
-  resolved "https://registry.yarnpkg.com/rust-http-playback-proxy/-/rust-http-playback-proxy-0.9.0.tgz#81adcc155a5adbc75cb1ce98382698b0865ab49a"
-  integrity sha512-av4xsKvg+KWuGuxyyuO4j6MyU1p1cSGLDbEh5KYQOGlS8bNNROLrPZlRThPiKP3eCvlgPWFuWUy5mYwZ1ZgSPQ==
+rust-http-playback-proxy@0.11.1:
+  version "0.11.1"
+  resolved "https://registry.yarnpkg.com/rust-http-playback-proxy/-/rust-http-playback-proxy-0.11.1.tgz#0c95629e189e6362c9dc0a9bfcbd7b681709e08a"
+  integrity sha512-UWC4tgV5vsU2lv2WMsV5IXrSiwbByZ7o7wOX+9J0x7NlYFE/W0Vbr+nyf3vpsKNOJKHLOnCsuXJAClcQ9r42lA==
   dependencies:
     tar "^7.0.0"
 
