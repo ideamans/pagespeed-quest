@@ -1,149 +1,186 @@
 ---
 name: psq-usage
-description: Run a PageSpeed Quest investigation with the `psq` CLI — freeze any public web page into a local recording, replay it with its original timing, and measure a front-end speed hypothesis with Lighthouse before and after. Use when the user wants to know how much a proposed optimization would gain, wants a before/after speed comparison for a page they cannot deploy to, or asks to audit a site's loading performance reproducibly.
+description: Run a whole PageSpeed Quest speed investigation of a URL with the `psq` CLI — record the page, measure the baseline, find the bottlenecks, try improvements one at a time on the recording, keep the ones that measurably help, and report what was changed and how much each metric and the score improved. Use when the user asks to improve, speed up or audit the loading speed of a page or URL, to propose front-end speed improvements backed by measurements, to estimate how much an optimization would gain without deploying it, or mentions PageSpeed Quest / psq. Entry point for the other psq-* skills.
 license: GPL-3.0-or-later
-compatibility: Requires a PageSpeed Quest project with `pagespeed-quest` installed as a dev dependency (see the psq-install skill) and network access to the page being recorded. Recording drives a real browser against the real site.
-allowed-tools: Bash(npx:*) Bash(yarn:*) Bash(npm:*) Bash(cp:*) Bash(mkdir:*) Bash(ls:*) Bash(cat:*) Bash(diff:*) Bash(du:*) Bash(find:*) Read Write Edit Glob Grep
+compatibility: Requires a PageSpeed Quest project with `pagespeed-quest` installed as a dev dependency (see psq-install), network access to the page for the one recording, and jq. Everything after the recording runs locally.
+allowed-tools: Bash(npx:*) Bash(yarn:*) Bash(npm:*) Bash(cp:*) Bash(rm:*) Bash(mv:*) Bash(mkdir:*) Bash(ls:*) Bash(cat:*) Bash(diff:*) Bash(du:*) Bash(find:*) Bash(jq:*) Read Write Edit Glob Grep
 ---
 
 # psq-usage
 
-Answer "how much would this optimization actually gain?" without the site's
-development environment, repository or a deploy.
+Answer "how could this page load faster, and by how much?" with measurements,
+without the site's repository, development environment or a deploy.
 
-`psq` records a real page load through a proxy, writes it to disk as editable
-files, and replays it reproducing the original per-resource latency and
-bandwidth. You edit the recording, replay, and compare. Because both sides come
-from the same frozen recording, the delta means something — unlike two
-measurements of a live site taken minutes apart.
+`psq` freezes one real page load into editable files and replays it with each
+resource's recorded latency and bandwidth. You change the recording, replay it,
+and compare. Because every number comes from the same frozen recording, a delta
+is the effect of your change and nothing else.
 
-**Read `npx psq llm` first.** It is the full reference for the installed
-version: the inventory schema, the timing model, and the catalogue of which edit
-models which optimization. This skill is the workflow; that is the manual.
+**This skill is the procedure; it does not tell you which optimizations to
+make.** Diagnosing the page and choosing what to try is your judgement. The
+skills it hands off to:
 
-## Before starting
+| Step | Skill |
+| --- | --- |
+| set up the project | **psq-install** |
+| record and freeze the page | **psq-record** |
+| measure, find bottlenecks, check rendering | **psq-measure** |
+| change the recording | **psq-inventory** |
+| before/after video (optional) | **psq-video** |
 
-- If `npx psq --help` fails, use the **psq-install** skill.
-- Recording sends real traffic to the target site from wherever this runs. On a
-  site the user does not own, confirm that is acceptable before recording.
-- Work inside the quest project directory. `inventory/` and `artifacts/` are
-  written relative to the working directory.
+`npx psq llm` prints the full reference for the installed version.
 
-## Workflow
+## 0. Agree the scope
 
-### 1. Record the page
+Before recording, settle with the user — or state your assumptions:
+
+- the URL, and `mobile` (default) or `desktop`
+- whether third-party tags are in scope (they decide `-x` at recording time)
+- how much to try: a fixed number of trials, or until a target is met.
+  Without an answer, stop after about five trials or when nothing promising is
+  left
+- recording a site the user does not own sends real traffic to it — confirm
+
+## 1. Set up and record
 
 ```bash
-npx psq lighthouse recording https://example.com/
+mkdir -p example-com-quest && cd example-com-quest   # psq-install if psq is missing
+npx psq lighthouse -a ./artifacts/recording recording https://example.com/
 ```
 
-- `-d/--device mobile|desktop` on `recording` (default `mobile`). Mobile is the
-  right default — it is where the problems are, and it is what Lighthouse
-  scores by default.
-- `-x/--exclude <regex>` (repeatable) drops noisy third parties from the
-  recording. Use it when the user wants to study their own code:
-  `-x 'google-analytics|doubleclick|connect\.facebook'`. Do **not** use it when
-  the question is "what are the third parties costing us" — that is an
-  experiment, not noise.
-
-This writes `inventory/index.json` and `inventory/contents/…`.
-
-### 2. Freeze the baseline
+Check the recording and freeze it, as described in **psq-record**:
 
 ```bash
 cp -r inventory baseline
+cp -r inventory accepted
+mkdir -p trials
 ```
 
-Non-negotiable. There is no undo on the inventory, and every later number is
-relative to this copy.
+The quest directory then holds:
 
-### 3. Measure the baseline
+| Path | Role |
+| --- | --- |
+| `baseline/` | the page as recorded. Never edited |
+| `accepted/` | baseline + every adopted change so far |
+| `inventory/` | the working copy for the current trial — what `psq` replays by default |
+| `artifacts/<label>-<n>/` | one Lighthouse run each |
+| `trials/<id>.diff` | what each trial changed |
+| `quest-log.md` | one line per trial — the source for the report |
+
+## 2. Measure the baseline
 
 ```bash
-npx psq -i ./baseline lighthouse -a ./artifacts-baseline playback
+for n in 1 2 3; do npx psq -i ./baseline lighthouse -a ./artifacts/baseline-$n playback; done
+npx psq -i ./baseline capture -a ./artifacts/baseline-capture
+jq -s -r -f metrics.jq artifacts/baseline-*/lighthouse.report.json
 ```
 
-Read `artifacts-baseline/summary.md` — metrics, per-metric scores with their
-Lighthouse weights, and traffic broken down by resource type. Report the
-starting position to the user before changing anything.
+(`metrics.jq` is defined in **psq-measure**.) Tell the user the starting
+position — score and the five metrics — before changing anything.
 
-Note the option order: `-i` belongs to `psq`, `-a` belongs to `lighthouse`, so
-each goes before the next subcommand.
+## 3. Investigate
 
-### 4. Form one hypothesis
+Use the report-reading recipes in **psq-measure** and the recorded sources
+(`inventory/contents/…`, located via `contentFilePath`) to build a list of
+candidate changes. For each, note the evidence (which audit, which request,
+which file) and which metric it should move. Order them by expected effect on
+the score — the metric weights are in `summary.md`.
 
-Read `summary.md` and the recording, and pick **one** change. The traffic
-breakdown usually points at it: an image type dominating transfer, a script
-count that explains TBT, a document `ttfbMs` that explains everything.
+Leave aside findings the replay cannot act on (caching across views, protocol,
+interaction) — mention them in the report instead.
 
-State the hypothesis to the user before editing, in the form "if X, then metric
-Y should improve by roughly Z".
+## 4. Trial loop
 
-### 5. Edit the recording
-
-Use the **psq-inventory** skill for the file layout and the recipe catalogue.
-One edit per measurement — two edits mean an unattributable delta.
-
-### 6. Measure again
+For each candidate, one at a time:
 
 ```bash
-npx psq lighthouse -a ./artifacts-after playback
-diff artifacts-baseline/summary.md artifacts-after/summary.md
+# a. start from what has been adopted so far
+rm -rf inventory && cp -r accepted inventory
+
+# b. make ONE change in ./inventory   (psq-inventory)
+
+# c. keep a record of the change
+diff -ru accepted inventory > trials/t01-<slug>.diff
+
+# d. does the page still render the same?
+npx psq capture -a ./artifacts/t01-capture \
+  --compare ./artifacts/baseline-capture/capture.png --baseline-label Baseline --current-label t01
+
+# e. measure
+for n in 1 2 3; do npx psq lighthouse -a ./artifacts/t01-<slug>-$n playback; done
+jq -s -r -f metrics.jq artifacts/t01-<slug>-*/lighthouse.report.json
 ```
 
-### 7. Check the page still renders
+Compare with the current reference — the latest adopted trial, or the baseline
+if nothing has been adopted yet. Then decide:
+
+| Result | Action |
+| --- | --- |
+| medians clearly better than the reference (beyond the spread), page renders the same | **adopt**: `rm -rf accepted && cp -r inventory accepted`; this trial becomes the reference |
+| no difference beyond the spread | **reject**, or measure two more runs per side if it is close |
+| worse, or the capture shows a broken or changed page | **reject**, or fix the edit and run it again as a new trial |
+
+Rejecting needs no clean-up — the next trial starts again from `accepted/`.
+Never adopt on a single run, and never adopt a change that alters what the page
+shows unless the user agreed to that change.
+
+Append one line to `quest-log.md` per trial, adopted or not:
+
+```markdown
+| id | change | evidence | Score | LCP | TBT | CLS | FCP | SI | render | decision |
+| t01 | defer tag manager | render-blocking-insight: gtm.js | 61→68 | 3.41→2.95 s | … | … | … | … | same | adopted |
+```
+
+Values are medians, reference → trial.
+
+## 5. Confirm the result
+
+When the loop ends, measure the final state against the baseline from scratch —
+adopted changes interact, so the sum of trial deltas is not the total:
 
 ```bash
-npx psq -i ./baseline capture -a ./artifacts-baseline
-npx psq capture --compare ./artifacts-baseline/capture.png \
-  --baseline-label "Before" --current-label "After"
+for n in 1 2 3; do npx psq -i ./accepted lighthouse -a ./artifacts/final-$n playback; done
+npx psq -i ./accepted capture -a ./artifacts/final-capture \
+  --compare ./artifacts/baseline-capture/capture.png --baseline-label Baseline --current-label Final
+jq -s -r -f metrics.jq artifacts/baseline-*/lighthouse.report.json
+jq -s -r -f metrics.jq artifacts/final-*/lighthouse.report.json
+diff -ru baseline accepted > trials/final.diff
 ```
 
-Look at `artifacts/capture-diff.png` and `capture-diff.txt`. A faster broken
-page is the most common false positive in this workflow, and it is invisible in
-the score.
+If the user wants something to show, make a before/after video with
+**psq-video** (`-i ./baseline` and `-i ./accepted`).
 
-### 8. Report
+## 6. Report
 
-Give the user, for each hypothesis: what was edited, the metric deltas, the
-overall score change, and whether the page still looks right. Repeat a
-measurement before reporting anything under ~5% — Lighthouse noise on a fixed
-recording is a few points either way.
+Write it in the user's language. Lead with the result, then the evidence:
 
-## Choosing the measurement surface
+1. **Result** — baseline → final medians for the score and each metric, number
+   of runs per side, and the visual check (`final-capture/capture-diff.txt`).
+2. **What was wrong and what was changed** — for each adopted trial: the
+   problem and its evidence, the change (file and a short description; the
+   diff is in `trials/`), and the delta it produced when adopted.
+3. **Tried and not adopted** — each rejected trial and why (no effect, worse,
+   broke the page). This is as informative as the adopted list.
+4. **Not addressed** — findings the replay cannot model, and anything left for
+   later.
+5. **Caveats** — these are measurements of a replay of one recording on this
+   machine, not field data; personalised or A/B-tested content was frozen as
+   recorded; changes the edit assumes of the server (headers, compression,
+   response time) are hypotheses for the site owner to implement.
 
-| Question | Command | Output |
-| --- | --- | --- |
-| Did the score move? | `psq lighthouse playback` | `artifacts/summary.md` |
-| What does it look like? | `psq loadshow playback` | `artifacts/loadshow.mp4` — see the **psq-video** skill |
-| Did I break it? | `psq capture --compare <png>` | `artifacts/capture-diff.png` |
-
-## Iterating interactively
-
-```bash
-npx psq proxy -p 8080
-```
-
-serves the inventory and restarts on any change under it. Point a browser at
-`http://localhost:8080` with certificate checks disabled and edits show up on
-reload — much faster than a Lighthouse run per keystroke:
-
-```bash
-/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome \
-  --ignore-certificate-errors --proxy-server=http://localhost:8080
-```
+Point to `artifacts/final-1/lighthouse.digest.png` and
+`artifacts/baseline-1/lighthouse.digest.png` as ready-made images.
 
 ## Failure modes
 
 | Symptom | Cause | Fix |
 | --- | --- | --- |
-| every request 404s during playback | empty inventory, or `-i` points elsewhere | record first; check `inventory/index.json` has a non-empty `resources` |
-| `unknown option` on `-i` / `-a` | options placed after the subcommand they do not belong to | `psq -i ./baseline lighthouse -a ./art playback` |
-| `playback` asks for a URL | it never does — a URL was passed by mistake | the entry URL comes from the inventory; re-record to change it |
-| the after-run is faster but the page is broken | a resource was removed from `index.json` while the HTML still references it | always run `psq capture --compare`; remove the reference too |
-| editing a `.js`/`.css` file changes nothing on the wire | that resource has `"minify": true` and is re-minified before serving | expected; only real byte reductions show up |
-| the score swings between identical runs | measurement noise | repeat three times per side; ignore deltas under ~5% |
-| recording is full of ad and analytics traffic | third parties were not excluded | re-record with `-x`, unless the third parties are the subject |
-| Lighthouse not found | it resolves to `./node_modules/.bin/lighthouse` | run inside the quest project, or set `LIGHTHOUSE_PATH` |
-| a recording of a personalised or A/B-tested page looks unrepresentative | the recording froze one variant | record again and compare; state the caveat in the report |
-| timings look impossibly fast | the run used `capture` (full-throttle) | never quote timing from `capture`; it disables the timing simulation on purpose |
+| trial deltas cannot be attributed | several changes in one trial, or a trial built on the previous trial instead of on `accepted/` | one change per trial; always `rm -rf inventory && cp -r accepted inventory` first |
+| the baseline numbers came from the recording run | the recording run's report was read as the baseline | the baseline is `psq -i ./baseline lighthouse … playback`; the recording run measures the live site |
+| an adopted change turns out to be noise | adopted on one run, or on a delta smaller than the spread | three runs per state minimum, compare medians and spread |
+| final total is smaller than the sum of the adopted deltas | adopted changes overlap | report the final-vs-baseline measurement as the result, not the sum |
+| faster but the page looks different | an edit removed or changed visible content | check the capture diff every trial; reject or fix |
+| `unknown option` on `-i` / `-a` | options placed after the subcommand they do not belong to | `psq -i ./accepted lighthouse -a ./artifacts/x-1 playback` |
+| every request 404s | `-i` points at an empty or wrong directory | check `<dir>/index.json` |
+| a comparison against the live site | numbers taken from a browser or PageSpeed Insights | every number in the report comes from a playback of this recording |
+| the quest drags on | no stopping rule | agree a trial budget or a target in step 0 |

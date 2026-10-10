@@ -22,12 +22,15 @@ gh skill install ideamans/pagespeed-quest/plugins/pagespeed-quest/skills/psq-usa
 
 | Skill | Use it when |
 | --- | --- |
+| `psq-usage` | the user wants a page made faster: the whole record → measure → investigate → trial → adopt → report loop |
 | `psq-install` | `psq` is missing, or a new investigation needs a project |
-| `psq-usage` | running the record → baseline → edit → measure loop |
-| `psq-inventory` | you need to know what to edit and what the edit will do |
+| `psq-record` | recording a page and freezing the baseline |
+| `psq-measure` | measuring a state several times, finding where the time goes, checking the page still renders |
+| `psq-inventory` | you need to know how an edit to the recording reaches the replay |
 | `psq-video` | the deliverable is a before/after video of the load |
 
-All four defer to `psq llm` for the authoritative reference, which ships inside
+The skills cover how to drive the tool; which optimizations to try is left to
+the agent. All six defer to `psq llm` for the authoritative reference, which ships inside
 the installed package and therefore cannot drift from it.
 
 ## Maintenance

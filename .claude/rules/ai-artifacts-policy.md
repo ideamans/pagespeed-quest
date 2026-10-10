@@ -17,7 +17,7 @@ chain is generated.
 | --- | --- |
 | the rules and failure modes agents get wrong | `llmdocs/00-guide.md` |
 | the inventory schema and file layout | `llmdocs/10-inventory.md` |
-| which edit models which optimization | `llmdocs/20-experiments.md` |
+| how an edit reaches the replay, what cannot be modelled | `llmdocs/20-experiments.md` |
 | how to measure, compare, film | `llmdocs/30-measuring.md` |
 | the command catalog | `src/cli.ts`, then regenerate |
 | CLI flags, defaults, descriptions | `src/cli.ts` (help text is what the catalog prints) |
