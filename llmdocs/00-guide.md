@@ -51,9 +51,12 @@ version installed in the project you are working in.
    the inventory at recording time and reused. If you need to change either,
    record again.
 
-5. **Lighthouse throttling is deliberately disabled** (`--throttling.*=0`,
-   `cpuSlowdownMultiplier=1`). Timing is reproduced by the proxy, per resource.
-   Re-enabling Lighthouse throttling would apply the penalty twice.
+5. **Lighthouse reports the load as observed** (`--throttling-method=provided`,
+   `--throttling.*=0`, `cpuSlowdownMultiplier=1`). Timing is reproduced by the
+   proxy, per resource, so Lighthouse must neither throttle again nor simulate.
+   Its default `simulate` method re-derives the metrics from a network model
+   that ignores the proxy — psq before 0.12 did that, and its numbers could even
+   fall below the document's TTFB. Do not compare scores across that boundary.
 
 6. **Unmatched requests get a 404.** The playback proxy only serves what is in
    the inventory. That is deliberate — falling through to the network would make
@@ -61,10 +64,10 @@ version installed in the project you are working in.
    failed request, not a request that never happens. To model "this resource is
    gone", also remove the reference to it from the HTML.
 
-7. **Never conclude from one run.** Even against a fixed recording, Lighthouse
-   varies between runs — on LCP sometimes by hundreds of milliseconds. Measure
-   each state at least three times, compare medians, and treat a difference
-   smaller than the spread within each state as no difference.
+7. **Never conclude from one run.** Runs of the same recording are close but
+   not identical, and an occasional run is an outlier. Measure each state at
+   least three times, compare medians, and treat a difference smaller than the
+   spread within each state as no difference.
 
 8. **The recording run is not the baseline.** `psq lighthouse recording` also
    writes a Lighthouse report, but it measured the live site through the

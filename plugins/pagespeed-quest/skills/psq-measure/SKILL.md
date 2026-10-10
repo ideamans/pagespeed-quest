@@ -30,9 +30,15 @@ done
 - Name runs `<label>-<n>`, where the label names the state (`baseline`,
   `accepted`, `t03-defer-gtm`, `final`). The label is what the report will cite.
 
-**Never conclude from one run.** Lighthouse varies between runs of the same
-recording, sometimes by hundreds of milliseconds on LCP. Three runs per state is
-the minimum; use five when the medians of two states are close.
+**Never conclude from one run.** Runs of the same recording are close but not
+identical, and an occasional run is an outlier. Three runs per state is the
+minimum; use five when the medians of two states are close. Each run takes
+roughly 20–30 seconds.
+
+The metrics are the load **as observed** in the replay (psq passes
+`--throttling-method=provided`). Scores from psq before 0.12, which let
+Lighthouse simulate them, are not comparable — never mix the two in one
+comparison.
 
 ## Medians and spread
 

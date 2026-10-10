@@ -68,7 +68,7 @@ The codebase follows a modular architecture with clear separation of concerns:
    - **Webshot** (`webshot.ts`): Captures screenshots and generates visual diffs via `static-webshot`
    - Lighthouse and Loadshow can work in recording or playback mode
    - Capture (webshot) works in playback mode only with full-throttle (no timing simulation)
-   - Lighthouse throttling is disabled as timing is handled by the Rust proxy
+   - Lighthouse throttling is disabled as timing is handled by the Rust proxy, and `--throttling-method=provided` makes Lighthouse report the load as observed. Do not drop it: the default `simulate` re-derives every metric from Lighthouse's own network model and ignores the proxy (psq < 0.12 did that)
 
 4. **Dependency Injection** (`dependency.ts`):
    - Central container for managing service dependencies
