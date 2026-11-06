@@ -38,7 +38,7 @@ test('Prettier HTML', async (t) => {
     </script>
   </body>
 </html>
-`
+`,
   )
 })
 
@@ -50,7 +50,7 @@ test('Prettier CSS', async (t) => {
     `body {
   color: red;
 }
-`
+`,
   )
 })
 
@@ -61,7 +61,7 @@ test('Prettier JS', async (t) => {
     beauty.toString(),
     `const foo = 1;
 const bar = 1;
-`
+`,
   )
 })
 
@@ -98,7 +98,7 @@ test('convertEditableText - throws for unsupported content type', async (t) => {
     async () => {
       await convertEditableText(content, 'application/json')
     },
-    { message: 'application/json is not supported text content type' }
+    { message: 'application/json is not supported text content type' },
   )
 })
 
@@ -110,6 +110,6 @@ test('Prettier CSS - removes @charset directive', async (t) => {
     `body {
   color: red;
 }
-`
+`,
   )
 })

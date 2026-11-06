@@ -19,7 +19,7 @@ export interface ExecWebshotCompareInput {
 
 export async function execWebshotCapture(
   input: ExecWebshotCaptureInput,
-  dependency: Pick<DependencyInterface, 'executeWebshot'>
+  dependency: Pick<DependencyInterface, 'executeWebshot'>,
 ): Promise<void> {
   const args: string[] = []
   args.push('capture')
@@ -37,7 +37,7 @@ export async function execWebshotCapture(
 
 export async function execWebshotCompare(
   input: ExecWebshotCompareInput,
-  dependency: Pick<DependencyInterface, 'executeWebshot'>
+  dependency: Pick<DependencyInterface, 'executeWebshot'>,
 ): Promise<void> {
   const args: string[] = []
   args.push('compare')

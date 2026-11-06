@@ -59,7 +59,7 @@ function execSpecToCommandArgs(spec: ExecLoadshowSpec): string[] {
 
 export async function execLoadshow(
   input: ExecLoadshowInput,
-  dependency: Pick<DependencyInterface, 'mkdirp' | 'executeLoadshow'>
+  dependency: Pick<DependencyInterface, 'mkdirp' | 'executeLoadshow'>,
 ): Promise<void> {
   const artifactsDir = input.artifactsDir || './artifacts'
   const loadshowDir = Path.join(artifactsDir, 'loadshow')

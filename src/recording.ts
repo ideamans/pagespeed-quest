@@ -208,7 +208,7 @@ async function startRecordingWithExclude(options: StartRecordingWithExcludeOptio
     await waitForPort(port, 15000)
   } catch (err) {
     if (exited) {
-      throw new Error('Proxy process exited before port became available')
+      throw new Error('Proxy process exited before port became available', { cause: err })
     }
     throw err
   }
@@ -219,7 +219,7 @@ async function startRecordingWithExclude(options: StartRecordingWithExcludeOptio
 export async function withRecordingProxy(
   options: RecordingProxyOptions,
   dependency: RecordingProxyDependency,
-  cb: (proxy: RecordingProxy) => Promise<void>
+  cb: (proxy: RecordingProxy) => Promise<void>,
 ): Promise<void> {
   const proxy = new RecordingProxy(options, dependency)
   await proxy.start()

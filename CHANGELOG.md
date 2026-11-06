@@ -1,6 +1,13 @@
 # Changelog
 
-All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+All notable changes to this project will be documented in this file.
+
+### 0.13.0 (2026-11-06)
+
+* **Update dependencies to clear known vulnerabilities.** A fresh install of the package now has none (`npm audit`: 0.12.0 had 1 critical and 13 high). Lighthouse 13.6, Puppeteer 25, Prettier 3, pino 10, commander 15, execa 10. Node.js 22.19 or newer is still enough
+* Drop the unused `node-html-to-image` dependency. It pinned an old Handlebars (critical) and its own Puppeteer, and nothing in psq called it
+* **The editable copies in `inventory/contents/` are now formatted by Prettier 3.** CSS, JavaScript and HTML come out with slightly different parentheses and line breaks than with 0.12. Replays are unaffected: unedited resources are served from `inventory/originals/`. A diff between an old and a new recording of the same page will show these formatting changes
+* Development tooling: ESLint 10 (flat config), AVA 8, nyc 18, cspell 10, TypeScript 6. Removed unused release tooling (standard-version, commitizen, typedoc, gh-pages, codecov)
 
 ### 0.12.0 (2026-10-11)
 

@@ -69,10 +69,10 @@ function registerLighthouseCommands(main: Command) {
             headless: !laud,
             timeout,
           },
-          dependency()
+          dependency(),
         )
         dependency().logger?.info('Lighthouse completed. Saving inventory...')
-      }
+      },
     )
   })
 
@@ -105,10 +105,10 @@ function registerLighthouseCommands(main: Command) {
             timeout,
             resources: inventory.resources,
           },
-          dependency()
+          dependency(),
         )
         dependency().logger?.info('Lighthouse completed')
-      }
+      },
     )
   })
 }
@@ -144,7 +144,7 @@ function registerLoadshowCommands(main: Command) {
       async (proxy) => {
         await execLoadshow({ url, proxyPort: proxy.port, deviceType, artifactsDir, credit, timeout }, dependency())
         dependency().logger?.info('Loadshow completed. Saving inventory...')
-      }
+      },
     )
   })
 
@@ -171,10 +171,10 @@ function registerLoadshowCommands(main: Command) {
             credit,
             timeout,
           },
-          dependency()
+          dependency(),
         )
         dependency().logger?.info('Loadshow completed')
-      }
+      },
     )
   })
 }
@@ -217,11 +217,10 @@ function registerProxyCommands(main: Command) {
               resolve()
             })
           })
-        }
+        },
       )
     } else {
       // Playbackモード
-      // eslint-disable-next-line no-constant-condition
       while (true) {
         await withPlaybackProxy({ inventoryRepository, port }, dependency(), async () => {
           const watcher = Watch(inventoryRepository.dirPath, { recursive: true })
@@ -274,7 +273,7 @@ function registerCaptureCommands(main: Command) {
             output: outputPath,
             timeout,
           },
-          dependency()
+          dependency(),
         )
         dependency().logger?.info(`Screenshot saved to ${outputPath}`)
 
@@ -291,12 +290,12 @@ function registerCaptureCommands(main: Command) {
               baselineLabel,
               currentLabel,
             },
-            dependency()
+            dependency(),
           )
           dependency().logger?.info(`Diff image saved to ${diffOutput}`)
           dependency().logger?.info(`Diff digest saved to ${digestTxt}`)
         }
-      }
+      },
     )
   })
 }

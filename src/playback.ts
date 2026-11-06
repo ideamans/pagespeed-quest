@@ -72,7 +72,7 @@ export class PlaybackProxy {
 export async function withPlaybackProxy(
   options: PlaybackProxyOptions,
   dependency: PlaybackProxyDependency,
-  cb: (proxy: PlaybackProxy) => Promise<void>
+  cb: (proxy: PlaybackProxy) => Promise<void>,
 ): Promise<void> {
   const proxy = new PlaybackProxy(options, dependency)
   await proxy.start()

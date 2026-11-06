@@ -69,7 +69,7 @@ test('RecordingProxy', async (t) => {
                     data,
                   })
                 })
-              }
+              },
             )
 
             req.on('error', (err) => {
@@ -82,7 +82,7 @@ test('RecordingProxy', async (t) => {
 
           t.is(response.statusCode, 200)
           t.is(response.data, 'ok')
-        }
+        },
       )
 
       // Verify inventory was saved (either inventory.json or index.json)
@@ -98,6 +98,6 @@ test('RecordingProxy', async (t) => {
 
       server.close()
     },
-    { unsafeCleanup: true }
+    { unsafeCleanup: true },
   )
 })

@@ -19,7 +19,7 @@ export interface ExecLighthouseInput {
 
 export async function execLighthouse(
   opts: ExecLighthouseInput,
-  dependency: Pick<DependencyInterface, 'mkdirp' | 'executeLighthouse' | 'logger'>
+  dependency: Pick<DependencyInterface, 'mkdirp' | 'executeLighthouse' | 'logger'>,
 ): Promise<void> {
   const artifactsDir = opts.artifactsDir || './artifacts'
   await dependency.mkdirp(artifactsDir)
@@ -69,7 +69,7 @@ export async function execLighthouse(
           htmlPath,
           outputPath: digestPath,
         },
-        dependency
+        dependency,
       )
     } catch (error) {
       dependency.logger?.warn(`Failed to capture Lighthouse score and metrics: ${error}`)
@@ -88,7 +88,7 @@ export async function execLighthouse(
           outputPath: summaryPath,
           resources: opts.resources,
         },
-        dependency
+        dependency,
       )
     } catch (error) {
       dependency.logger?.warn(`Failed to generate Lighthouse summary: ${error}`)

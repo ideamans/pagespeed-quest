@@ -40,7 +40,7 @@ test('Save and load inventory', async (t) => {
       const loaded = await inventoryRepository.loadInventory()
       t.deepEqual(loaded, saving)
     },
-    { unsafeCleanup: true }
+    { unsafeCleanup: true },
   )
 })
 
@@ -105,7 +105,7 @@ test('Transactions and resources', async (t) => {
     Hello World
   </body>
 </html>
-`
+`,
       )
 
       const loaded = await inventoryRepository.loadTransactions(resources)
@@ -136,7 +136,7 @@ test('Transactions and resources', async (t) => {
         },
       ])
     },
-    { unsafeCleanup: true }
+    { unsafeCleanup: true },
   )
 })
 
@@ -210,7 +210,7 @@ test('Load inventory - fallback to legacy index.json', async (t) => {
       const loaded = await inventoryRepository.loadInventory()
       t.deepEqual(loaded, inventory)
     },
-    { unsafeCleanup: true }
+    { unsafeCleanup: true },
   )
 })
 
@@ -244,7 +244,7 @@ test('Transaction with content-encoding gzip', async (t) => {
       const savedContent = await Fsp.readFile(Path.join(tmp.path, resources[0].contentFilePath!), 'utf8')
       t.true(savedContent.includes('Compressed Content'))
     },
-    { unsafeCleanup: true }
+    { unsafeCleanup: true },
   )
 })
 
@@ -279,7 +279,7 @@ test('Load transaction with content-encoding', async (t) => {
       // Content should be compressed
       t.true(transactions[0].content!.length > 0)
     },
-    { unsafeCleanup: true }
+    { unsafeCleanup: true },
   )
 })
 
@@ -306,7 +306,7 @@ test('Transaction without content', async (t) => {
       t.is(resources.length, 1)
       t.is(resources[0].contentFilePath, undefined)
     },
-    { unsafeCleanup: true }
+    { unsafeCleanup: true },
   )
 })
 
@@ -338,7 +338,7 @@ test('Transaction with binary content (non-text)', async (t) => {
       const savedContent = await Fsp.readFile(Path.join(tmp.path, resources[0].contentFilePath!))
       t.deepEqual(savedContent, binaryContent)
     },
-    { unsafeCleanup: true }
+    { unsafeCleanup: true },
   )
 })
 
@@ -362,6 +362,6 @@ test('Load transaction with missing file', async (t) => {
       t.is(transactions[0].rawHeaders['content-length'], '0')
       t.is(transactions[0].durationMs, 0)
     },
-    { unsafeCleanup: true }
+    { unsafeCleanup: true },
   )
 })
