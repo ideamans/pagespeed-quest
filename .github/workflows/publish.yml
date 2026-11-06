@@ -36,11 +36,16 @@ jobs:
     # Publishing is driven by tags, not by pushes to main, so that merging a
     # branch never releases by itself. Tag with `v<package.json version>`.
     if: startsWith(github.ref, 'refs/tags/v')
+    # npm の Trusted Publishing（OIDC）で公開する。トークンの secret は使わない。
+    # npmjs.com のパッケージ設定で、このリポジトリの publish.yml を Trusted Publisher に登録してある前提
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '22.x'
+          node-version: '24.x'
           cache: yarn
           registry-url: 'https://registry.npmjs.org'
       - name: Verify the tag matches package.json and the plugin manifest
@@ -53,7 +58,8 @@ jobs:
           test "$tag" = "$plugin" || { echo "::error::tag $tag does not match plugin.json $plugin"; exit 1; }
       - name: Install modules
         run: yarn install --frozen-lockfile
+      # Trusted Publishing には npm 11.5.1 以上が要る
+      - name: Update npm
+        run: npm install -g npm@latest
       - name: Publish to npm
         run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

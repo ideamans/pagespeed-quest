@@ -181,6 +181,11 @@ as `package.json`; the validator enforces it. Publishing to npm happens on a
 `v*` tag push, and the workflow refuses to publish if the tag and
 `package.json.version` disagree.
 
+The workflow publishes through npm **Trusted Publishing** (OIDC, `id-token: write`), not an
+`NPM_TOKEN` secret — the token-based publish failed with `E404` on `PUT` for v0.12.0 and v0.13.0
+(npm answers 404, not 401, when the credentials are bad). The package's npmjs.com settings must list
+`ideamans/pagespeed-quest` / `publish.yml` as its Trusted Publisher.
+
 ### Node version
 
 Node **22.19 or newer** — Lighthouse 13's floor, and what `engines.node`
