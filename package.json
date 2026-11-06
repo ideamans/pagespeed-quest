@@ -6,7 +6,10 @@
   "main": "build/index.js",
   "typings": "build/index.d.ts",
   "module": "build/index.js",
-  "repository": "https://github.com/ideamans/pagespeed-quest",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ideamans/pagespeed-quest.git"
+  },
   "license": "GPL-3.0-or-later",
   "keywords": [
     "HTTP Proxy",
