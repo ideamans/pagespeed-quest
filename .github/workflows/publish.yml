@@ -36,7 +36,7 @@ jobs:
     # Publishing is driven by tags, not by pushes to main, so that merging a
     # branch never releases by itself. Tag with `v<package.json version>`.
     if: startsWith(github.ref, 'refs/tags/v')
-    # npm の Trusted Publishing（OIDC）で公開する。トークンの secret は使わない。
+    # npm の Trusted Publishing（OIDC）で公開待ちに積む（staged publish）。トークンの secret は使わない。
     # npmjs.com のパッケージ設定で、このリポジトリの publish.yml を Trusted Publisher に登録してある前提
     permissions:
       contents: read
@@ -61,5 +61,7 @@ jobs:
       # Trusted Publishing には npm 11.5.1 以上が要る
       - name: Update npm
         run: npm install -g npm@latest
-      - name: Publish to npm
-        run: npm publish --access public
+      # Trusted Publisher の権限は「stage publish」。ここでは公開待ちに積むだけで、
+      # npmjs.com で 2FA つきの承認をすると公開される（npm stage approve <id> でも可）
+      - name: Stage the release on npm
+        run: npm stage publish . --access public
