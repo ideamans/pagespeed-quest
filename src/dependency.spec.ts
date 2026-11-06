@@ -25,7 +25,7 @@ test('Dependency mkdirp creates directory', async (t) => {
       const stat = await Fsp.stat(newDir)
       t.true(stat.isDirectory())
     },
-    { unsafeCleanup: true }
+    { unsafeCleanup: true },
   )
 })
 
@@ -39,6 +39,6 @@ test('Dependency mkdirp does not throw if directory exists', async (t) => {
         await dependency.mkdirp(tmp.path)
       })
     },
-    { unsafeCleanup: true }
+    { unsafeCleanup: true },
   )
 })

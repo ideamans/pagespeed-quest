@@ -4,7 +4,8 @@
     "target": "esnext",
     "outDir": "build",
     "rootDir": "src",
-    "moduleResolution": "Node",
+    "moduleResolution": "bundler",
+    "strict": false /* TypeScript 6 で既定が true になったので、これまでどおり明示的に切る */,
     "module": "esnext",
     "declaration": true,
     "inlineSourceMap": true,
@@ -38,7 +39,7 @@
     // "experimentalDecorators": true /* Enables experimental support for ES7 decorators. */,
     // "emitDecoratorMetadata": true /* Enables experimental support for emitting type metadata for decorators. */,
 
-    "lib": ["es2017", "dom"],
+    "lib": ["es2022", "dom"],
     "types": ["node"],
     "typeRoots": ["node_modules/@types", "src/types"]
   },

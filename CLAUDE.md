@@ -114,7 +114,8 @@ directory. `90-commands.md` is generated — see below.
 - Applied to all `.ts` files in `src/`
 
 ### Linting
-- ESLint with TypeScript parser
+- ESLint 10 flat config (`eslint.config.mjs`) with typescript-eslint. TypeScript stays on 6.0.x until typescript-eslint supports 7
+- TypeScript 6 turned `strict` on by default and stopped loading `@types/*` implicitly, so `tsconfig.json` sets `strict: false` and `types: ["node"]` explicitly
 - Prettier integration for consistent formatting
 - Checks for unused variables and implicit returns
 

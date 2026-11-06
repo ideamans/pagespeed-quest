@@ -123,7 +123,7 @@ export class InventoryRepository {
       if (transaction.content) {
         const steps: {
           decoded?: Buffer
-          editable?: Buffer
+          editable?: Buffer | string
         } = {}
 
         const contentFilePath = requestContentFilePath(resource.method, resource.url)
@@ -141,7 +141,7 @@ export class InventoryRepository {
             steps.editable = await convertEditableText(
               steps.decoded,
               resource.contentTypeMime,
-              resource.contentTypeCharset
+              resource.contentTypeCharset,
             )
             resource.contentTypeCharset = 'utf-8'
           } catch (err) {
@@ -164,7 +164,7 @@ export class InventoryRepository {
       } catch (err) {
         this.dependency.logger?.error(
           { err, method: transaction.method, url: transaction.url },
-          `Failed to save transaction ${transaction.url}: ${err.message}`
+          `Failed to save transaction ${transaction.url}: ${err.message}`,
         )
       }
     }
@@ -233,7 +233,7 @@ export class InventoryRepository {
       if (resource.contentTypeMime) {
         transaction.rawHeaders['content-type'] = stringifyContentTypeHeader(
           resource.contentTypeMime,
-          resource.contentTypeCharset
+          resource.contentTypeCharset,
         )
       }
 

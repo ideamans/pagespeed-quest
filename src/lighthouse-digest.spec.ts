@@ -56,7 +56,7 @@ test('captureLighthouseDigest - creates digest screenshot', async (t) => {
           error: () => undefined,
         } as unknown as DependencyInterface['logger'],
         mkdirp: async () => undefined,
-      }
+      },
     )
 
     // Check that the output file exists
@@ -92,10 +92,10 @@ test('captureLighthouseDigest - throws error when elements not found', async (t)
               error: () => undefined,
             } as unknown as DependencyInterface['logger'],
             mkdirp: async () => undefined,
-          }
+          },
         )
       },
-      { message: /Required elements not found/ }
+      { message: /Required elements not found/ },
     )
   } finally {
     // Cleanup

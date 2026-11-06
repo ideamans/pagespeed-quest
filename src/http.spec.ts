@@ -27,11 +27,11 @@ test('urlToContentFilePath', (t) => {
   t.is(requestContentFilePath('get', 'http://example.com/path/to/image.jpg'), 'get/http/example.com/path/to/image.jpg')
   t.is(
     requestContentFilePath('get', 'http://example.com/path/to/image.jpg?ts=123'),
-    'get/http/example.com/path/to/image~ts=.jpg'
+    'get/http/example.com/path/to/image~ts=.jpg',
   )
   t.is(
     requestContentFilePath('get', `http://example.com/path/to/image.jpg?${longParam}`),
-    `get/http/example.com/path/to/image~xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx_b5114ebf.jpg`
+    `get/http/example.com/path/to/image~xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx_b5114ebf.jpg`,
   )
 })
 
@@ -45,7 +45,7 @@ test('stringifyContentType', (t) => {
   t.is(stringifyContentTypeHeader('text/html', 'utf-8'), 'text/html; charset=utf-8')
   t.is(
     stringifyContentTypeHeader('text/html', 'utf-8', 'text/html; charset=ascii; foo=bar'),
-    'text/html; charset=utf-8; foo=bar'
+    'text/html; charset=utf-8; foo=bar',
   )
   t.is(stringifyContentTypeHeader('text/html', 'utf-8', 'text/html; foo=bar'), 'text/html; charset=utf-8; foo=bar')
 })

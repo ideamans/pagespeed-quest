@@ -38,8 +38,8 @@ export interface BeautifyResult {
 export async function convertEditableText(
   content: Buffer,
   contentTypeMime: string,
-  contentTypeCharset?: string
-): Promise<Buffer> {
+  contentTypeCharset?: string,
+): Promise<string> {
   const charset = contentTypeCharset || 'utf-8'
   if (isHtml(contentTypeMime)) {
     const utf8 = ensureUtf8String(content, charset)

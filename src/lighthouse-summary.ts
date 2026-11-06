@@ -148,7 +148,7 @@ function calculateResourceStats(report: LighthouseReport): {
       trafficSize: acc.trafficSize + s.trafficSize,
       resourceSize: acc.resourceSize + s.resourceSize,
     }),
-    { trafficSize: 0, resourceSize: 0 }
+    { trafficSize: 0, resourceSize: 0 },
   )
 
   return { stats, totals }
@@ -181,7 +181,7 @@ function formatValue(numericValue: number | undefined, unit: string): string {
  */
 export async function generateLighthouseSummary(
   opts: GenerateLighthouseSummaryInput,
-  dependency: Pick<DependencyInterface, 'logger' | 'mkdirp'>
+  dependency: Pick<DependencyInterface, 'logger' | 'mkdirp'>,
 ): Promise<void> {
   // Read and parse the Lighthouse JSON report
   const jsonContent = await fs.readFile(opts.jsonPath, 'utf-8')
@@ -240,7 +240,7 @@ export async function generateLighthouseSummary(
       lines.push(
         `- **total** / ${stats.reduce((sum, s) => sum + s.count, 0)} / ${formatBytes(totals.trafficSize)} / ${
           totals.trafficSize
-        }`
+        }`,
       )
       lines.push('')
 
@@ -253,7 +253,7 @@ export async function generateLighthouseSummary(
       lines.push(
         `- **total** / ${stats.reduce((sum, s) => sum + s.count, 0)} / ${formatBytes(totals.resourceSize)} / ${
           totals.resourceSize
-        }`
+        }`,
       )
       lines.push('')
     }

@@ -23,10 +23,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: npm
+          cache: yarn
           registry-url: 'https://registry.npmjs.org'
       - name: Install modules
-        run: yarn install
+        run: yarn install --frozen-lockfile
       - name: Building & Testing
         run: yarn test
 
@@ -41,7 +41,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22.x'
-          cache: npm
+          cache: yarn
           registry-url: 'https://registry.npmjs.org'
       - name: Verify the tag matches package.json and the plugin manifest
         run: |
@@ -52,7 +52,7 @@ jobs:
           test "$tag" = "$pkg" || { echo "::error::tag $tag does not match package.json $pkg"; exit 1; }
           test "$tag" = "$plugin" || { echo "::error::tag $tag does not match plugin.json $plugin"; exit 1; }
       - name: Install modules
-        run: yarn install
+        run: yarn install --frozen-lockfile
       - name: Publish to npm
         run: npm publish --access public
         env:

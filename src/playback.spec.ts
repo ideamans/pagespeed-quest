@@ -75,7 +75,7 @@ test('PlaybackProxy', async (t) => {
                     data,
                   })
                 })
-              }
+              },
             )
 
             req.on('error', (err) => {
@@ -88,9 +88,9 @@ test('PlaybackProxy', async (t) => {
 
           t.is(response.statusCode, 200)
           t.is(response.data, 'ok')
-        }
+        },
       )
     },
-    { unsafeCleanup: true }
+    { unsafeCleanup: true },
   )
 })

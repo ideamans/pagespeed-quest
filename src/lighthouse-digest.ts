@@ -17,7 +17,7 @@ export interface CaptureLighthouseDigestInput {
  */
 export async function captureLighthouseDigest(
   opts: CaptureLighthouseDigestInput,
-  dependency: Pick<DependencyInterface, 'logger' | 'mkdirp'>
+  dependency: Pick<DependencyInterface, 'logger' | 'mkdirp'>,
 ): Promise<void> {
   const browser = await puppeteer.launch({
     headless: true,

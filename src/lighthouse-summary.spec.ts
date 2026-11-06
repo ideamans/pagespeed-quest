@@ -75,7 +75,7 @@ test('generateLighthouseSummary - creates summary markdown with metrics and scor
           error: () => undefined,
         } as unknown as DependencyInterface['logger'],
         mkdirp: async () => undefined,
-      }
+      },
     )
 
     // Check that the output file exists and has content
@@ -144,7 +144,7 @@ test('generateLighthouseSummary - handles null scores', async (t) => {
           error: () => undefined,
         } as unknown as DependencyInterface['logger'],
         mkdirp: async () => undefined,
-      }
+      },
     )
 
     const content = await fs.readFile(outputPath, 'utf-8')
@@ -193,7 +193,7 @@ test('generateLighthouseSummary - handles missing numericValue', async (t) => {
           error: () => undefined,
         } as unknown as DependencyInterface['logger'],
         mkdirp: async () => undefined,
-      }
+      },
     )
 
     const content = await fs.readFile(outputPath, 'utf-8')
@@ -242,7 +242,7 @@ test('generateLighthouseSummary - handles missing metrics', async (t) => {
           error: () => undefined,
         } as unknown as DependencyInterface['logger'],
         mkdirp: async () => undefined,
-      }
+      },
     )
 
     const content = await fs.readFile(outputPath, 'utf-8')
@@ -294,7 +294,7 @@ test('generateLighthouseSummary - CLS value formatted with 3 decimal places', as
           error: () => undefined,
         } as unknown as DependencyInterface['logger'],
         mkdirp: async () => undefined,
-      }
+      },
     )
 
     const content = await fs.readFile(outputPath, 'utf-8')
@@ -421,7 +421,7 @@ test('generateLighthouseSummary - no traffic section when resources not provided
           error: () => undefined,
         } as unknown as DependencyInterface['logger'],
         mkdirp: async () => undefined,
-      }
+      },
     )
 
     const content = await fs.readFile(outputPath, 'utf-8')
