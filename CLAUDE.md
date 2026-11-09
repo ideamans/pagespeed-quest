@@ -181,13 +181,20 @@ as `package.json`; the validator enforces it. Publishing to npm happens on a
 `v*` tag push, and the workflow refuses to publish if the tag and
 `package.json.version` disagree.
 
-The workflow publishes through npm **Trusted Publishing** (OIDC, `id-token: write`), not an
-`NPM_TOKEN` secret — the token-based publish failed with `E404` on `PUT` for v0.12.0 and v0.13.0
-(npm answers 404, not 401, when the credentials are bad). The package's npmjs.com settings list
-`ideamans/pagespeed-quest` / `publish.yml` as its Trusted Publisher with the **stage publish** permission:
-the workflow runs `npm stage publish`, which only queues the version. **A maintainer then approves it on
-npmjs.com (with 2FA) or with `npm stage approve <id>`** — until then `npm view pagespeed-quest version`
-still shows the previous release. A plain `npm publish` from CI fails with `E403 OIDC permission denied`.
+The workflow (`.github/workflows/publish.yml`) publishes through npm **Trusted Publishing** (OIDC,
+`id-token: write`), not an `NPM_TOKEN` secret — the token-based publish failed with `E404` on `PUT` for v0.12.0
+and v0.13.0 (npm answers 404, not 401, when the credentials are bad). It runs a plain `npm publish`, so a tag
+goes straight to npm; there is no staged approval any more (v0.13.0 was the last staged release).
+
+```bash
+# bump package.json and plugin.json, commit, push, then
+git tag vX.Y.Z && git push origin vX.Y.Z
+```
+
+The package's npmjs.com settings must list `ideamans/pagespeed-quest` / `publish.yml` as its Trusted Publisher
+with the **publish** permission. With only the stage-publish permission, `npm publish` fails with
+`E403 OIDC permission denied`. If the version is already on npm the job does nothing; to re-run without moving
+the tag, start "Publish to npm" with workflow_dispatch. Tests on push and PRs live in `test.yml`.
 
 ### Node version
 
