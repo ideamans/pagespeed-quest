@@ -195,6 +195,8 @@ The package's npmjs.com settings must list `ideamans/pagespeed-quest` / `publish
 with the **publish** permission. With only the stage-publish permission, `npm publish` fails with
 `E403 OIDC permission denied`. If the version is already on npm the job does nothing; to re-run without moving
 the tag, start "Publish to npm" with workflow_dispatch. Tests on push and PRs live in `test.yml`.
+`repository` in package.json must keep pointing at `ideamans/pagespeed-quest`: provenance verification
+compares them and a mismatch fails the publish with `E422` (the workflow checks it first).
 
 ### Node version
 

@@ -53,6 +53,17 @@ jobs:
           for dir in .; do
             name=$(node -p "require('./$dir/package.json').name")
             version=$(node -p "require('./$dir/package.json').version")
+            # provenance の検証は package.json の repository とこのリポジトリの一致を見る（違うと公開が E422 で落ちる）
+            node -e '
+              const f = process.argv[1], want = "https://github.com/" + process.env.GITHUB_REPOSITORY
+              const r = require(f).repository
+              let u = (typeof r === "string" ? r : (r && r.url) || "").replace(/^git\+/, "").replace(/\.git$/, "")
+              u = u.replace(/^git@github\.com:/, "https://github.com/").replace(/^(ssh|git):\/\/(git@)?github\.com\//, "https://github.com/").replace(/^github:/, "https://github.com/")
+              if (!/^https:\/\//.test(u)) u = "https://github.com/" + u
+              if (u.toLowerCase() !== want.toLowerCase()) {
+                console.error(`::error::${f} の repository（${u}）が ${want} と一致しない`)
+                process.exit(1)
+              }' "$PWD/$dir/package.json"
             if [ "$GITHUB_REF_TYPE" = "tag" ] && [ "${GITHUB_REF_NAME#v}" != "$version" ]; then
               echo "::error::タグ $GITHUB_REF_NAME が $dir/package.json の version（$version）と一致しない"
               exit 1
